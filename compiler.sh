@@ -1,1 +1,1 @@
-g++ `pkg-config --cflags opencv` original.cpp `pkg-config --libs opencv` -o original.o
+gcc main.cpp src/*.cpp -o main -Ofast -std=c++11

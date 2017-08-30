@@ -37,8 +37,8 @@
 #include <string.h>
 #include <limits.h>
 #include <assert.h>
-#include "arcode.h"
-#include "bitfile/bitfile.h"
+#include "../includes/arcode.h"
+#include "../includes/bitfile.h"
 
 #ifdef NDEBUG
 #define PrintDebug(ARGS) do {} while (0)
