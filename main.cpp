@@ -1,4 +1,4 @@
-#include "includes/bitfile.hpp"
+#include "includes/encode.hpp"
 
 int main(int argc, char *argv[]) {
 	
