@@ -1,5 +1,5 @@
-#ifndef ENCODE_HPP
-#define ENCODE_HPP
+#ifndef DECODE_HPP
+#define DECODE_HPP
 
 /***************************************************************************
 *                             INCLUDED FILES
@@ -8,13 +8,14 @@
 /***************************************************************************
 *                               FUNCTIONS
 ***************************************************************************/
-static void WriteHeader(bit_file_t *bfpOut, stats_t *stats);
+static int ReadHeader(bit_file_t *bfpIn, stats_t *stats);
 static void ApplySymbolRange(int symbol, stats_t *stats, char model);
 static void SymbolCountToProbabilityRanges(stats_t *stats);
-static void WriteEncodedBits(bit_file_t *bfpOut, stats_t *stats);
-static void WriteRemaining(bit_file_t *bfpOut, stats_t *stats);
-static int BuildProbabilityRangeList(FILE *fpIn, stats_t *stats);
+static void InitializeDecoder(bit_file_t *bfpOut, stats_t *stats);
+static probability_t GetUnscaledCode(stats_t *stats);
+static int GetSymbolFromProbability(probability_t probability, stats_t *stats);
+static void ReadEncodedBits(bit_file_t *bfpIn, stats_t *stats);
 static void InitializeAdaptiveProbabilityRangeList(stats_t *stats);
-int ArEncodeFile(FILE *inFile, FILE *outFile, const model_t model);
+int ArDecodeFile(FILE *inFile, FILE *outFile, const model_t model);
 
 #endif
