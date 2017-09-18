@@ -201,17 +201,6 @@ void* myidct(void* arguments) //(float **Matrix, float **DCTMatrix, int N, int M
 //***********************************************************************************************************
 //new gmpr code developed by Marcos Rodrigues [October 2016] starts here....
 
-string vec2string( vector<int> vec)
-{
-    //convert input vector to a string stream
-    std::stringstream ss;
-    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(ss," "));
-    string s = ss.str();
-    //replace the trailing space by EOF
-    s.replace(s.end()-1,s.end(),1,(char)EOF_CHAR);
-    return s;
-}
-
 vector<int> string2vec( string sMsg )
 {
     vector<int> vOut;
@@ -226,10 +215,6 @@ vector<int> string2vec( string sMsg )
 
 
 //Some global variables to facilitate thread functions
-std::vector<int>  K(3);              //make key int for lossless text processing. Remove this limitation later on.
-std::vector<int>  nData;             //data to compress
-std::vector<int>  nLimited;          //list of unique ASCII/UTF characters in the file
-std::vector<int>  nCoded;            //coded vector by the triple key
 std::vector<vector<int> > nDecoded;  //2D decoded vector by multiple threads
 int nThreads;          //how many threads were ever spawn
 int nThreadCount;      //how many threads are there at execution time
@@ -243,16 +228,6 @@ int max_in_vector(std::vector<int> vnData)
         if (vnData[i]>nMaximum) nMaximum = vnData[i];
 	 }
     return(nMaximum);
-}
-
-bool is_in(int n, std::vector<int> vnData)
-{
-    bool bResult = false;
-    for (int i=0; i<vnData.size(); i++)
-    {
-        if (n == vnData[i]) bResult = true;
-    }
-    return bResult;
 }
 
 std::vector<int> sort_limited_by_counts( std::vector<int> vnLimited, std::vector<int> vnData) //not used
@@ -291,91 +266,12 @@ std::vector<int> sort_limited_by_counts( std::vector<int> vnLimited, std::vector
     return limited_sorted;
 }
 
-std::vector<int> generate_limited_data(std::vector<int> vnData)
-{
-    std::vector<int>tmp(256); //max number of possible different characters
-    tmp[0]=vnData[0]; int k=1;
-    for (int i=1; i<vnData.size(); i++)
-    {
-        if (!is_in(vnData[i], tmp))
-        {
-            tmp[k]=vnData[i];
-            k++;
-        }
-    }
-    std::vector<int>vnLimited(k);
-    for (int i=0; i<k; i++) vnLimited[i]=tmp[i];
-    return vnLimited;
-}
-
 void generate_key(std::vector<int> vnData, int nStartValue=1, int nFactor=2) //not used
 {
     int fMaxValue = 2*max_in_vector(vnData);
     K[0]=nStartValue;
     K[1]=((nStartValue*fMaxValue)+1);
     K[2]=((K[1]*fMaxValue)+1)* nFactor;
-}
-
-void generate_random_key(std::vector<int> vnData, int nSeed1=10, int nSeed2=1000)
-{
-    srand (time(NULL));
-    int nStartValue = rand()%nSeed1+1;
-    int nFactor = rand()%nSeed1+1;
-    int nMaxValue = 2*max_in_vector(vnData);
-    K[0]=rand()%nSeed2+1;
-    K[1]=((nStartValue*nMaxValue)+1);
-    K[2]=((K[1]*nMaxValue)+1) * nFactor;
-}
-
-std::vector<int> generate_coded_vector(std::vector<int> vnData)
-{
-    //this function codes every 3 numbers into one, so need to check length as multiple of 3
-    int rem = vnData.size()%3;
-    int ext = vnData.size()%3>0?1:0;
-    std::vector<int>vnResult(vnData.size()/3+ext);
-
-    int k=0;
-    if (rem==0)//lucky me
-    {
-        for (int i=0; i<vnData.size(); i+=3) //code each set of 3 entries
-        {
-            vnResult[k] = K[0]*vnData[i] + K[1]*vnData[i+1] + K[2]*vnData[i+2];
-            k++;
-        }
-    }
-    else if (rem==1)
-    {
-       for (int i=0; i<vnData.size(); i+=3)
-       {
-           if (i+1==vnData.size())
-           {
-               vnResult[k] = K[0]*vnData[i]; //i is last entry, the set of 3 has only one value
-               k++;
-           }
-            else //compute as normal, we have not reached the last set of 3 entries
-            {
-                vnResult[k] = K[0]*vnData[i] + K[1]*vnData[i+1] + K[2]*vnData[i+2];
-                k++;
-            }
-       }
-    }
-    else if (rem==2)
-    {
-       for (int i=0; i<vnData.size(); i+=3)
-       {
-           if (i+2==vnData.size())
-           {
-               vnResult[k] = K[0]*vnData[i] + K[1]*vnData[i+1]; //last entry, set of 3 has 2 values
-               k++;
-           }
-            else //compute as normal, not reached the last set yet
-            {
-                vnResult[k] = K[0]*vnData[i] + K[1]*vnData[i+1] + K[2]*vnData[i+2];
-                k++;
-            }
-       }
-    }
-    return vnResult;
 }
 
 std::vector<int> open_coded_file(FILE *fp) //fp is already open
@@ -674,22 +570,6 @@ int batch_decode(char* dirin, char* dirout, const model_t model)
 //*******************************************************************************
 int main(int argc, char *argv[])
 {
-    if (encode) //we want to encode a file, single threaded always
-    {
-
-        nLimited = generate_limited_data(nData);
-        generate_random_key(nData);
-        nCoded=generate_coded_vector(nData);
-        vector<int> coded_vector = K;
-        cout << "\nK[0], K[1], K[2] = " << K[0] << " " <<K[1] <<" " <<K[2] <<"\n";
-        coded_vector.push_back( nLimited.size());
-        coded_vector.push_back( nCoded.size());
-        coded_vector.insert(coded_vector.end(), nLimited.begin(), nLimited.end());
-        coded_vector.insert(coded_vector.end(), nCoded.begin(), nCoded.end());
-        string sMsg = vec2string( coded_vector );
-        myArEncodeString(sMsg, outFile, model); //arithmetic code the encoded vector, save to file
-        fclose(outFile);
-    }
     else //decode using multiple threads
     {
         struct timeval tic, toc; gettimeofday(&tic,NULL);

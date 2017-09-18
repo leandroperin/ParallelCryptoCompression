@@ -2,16 +2,19 @@
 #include "includes/decode.hpp"
 #include "includes/optlist.hpp"
 #include "includes/utils.hpp"
-// 
-// using namespace std;
+#include <iostream>
+
+using namespace std;
 
 option_t *optList, *thisOpt;
 FILE *inFile, *outFile;
 bool toEncode;
 model_t model;
 
-// vector<int> nData;
-// vector<int> nLimited;
+vector<int> nData;
+vector<int> nLimited;
+vector<int> nCoded;
+vector<int> K(3);
 
 void initializeData() {
 	inFile = NULL;
@@ -119,7 +122,23 @@ void validateCommandLine(char *argv[]) {
 }
 
 void encode() {
-	// nData = open_raw_file(inFile);
+	nData = open_raw_file(inFile);
+	nLimited = generate_limited_data(nData);
+	K = generate_random_key(nData);
+	nCoded = generate_coded_vector(nData);
+
+	vector<int> coded_vector = K;
+	cout << "\nK[0], K[1], K[2] = " << K[0] << " " << K[1] << " " << K[2] << endl;
+
+	coded_vector.push_back(nLimited.size());
+	coded_vector.push_back(nCoded.size());
+	coded_vector.insert(coded_vector.end(), nLimited.begin(), nLimited.end());
+	coded_vector.insert(coded_vector.end(), nCoded.begin(), nCoded.end());
+
+	string sMsg = vec2string(coded_vector);
+	myArEncodeString(sMsg, outFile, model);
+
+	fclose(outFile);
 }
 
 void decode() {

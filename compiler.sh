@@ -1,2 +1,2 @@
 reset
-gcc main.cpp src/*.cpp -o main -Ofast -std=c++11
+g++ main.cpp src/*.cpp -o main -Ofast -std=c++11
