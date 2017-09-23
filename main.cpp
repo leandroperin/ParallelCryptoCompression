@@ -125,7 +125,7 @@ void encode() {
 	nData = open_raw_file(inFile);
 	nLimited = generate_limited_data(nData);
 	K = generate_random_key(nData);
-	nCoded = generate_coded_vector(nData);
+	nCoded = generate_coded_vector(nData, K);
 
 	vector<int> coded_vector = K;
 	cout << "\nK[0], K[1], K[2] = " << K[0] << " " << K[1] << " " << K[2] << endl;
@@ -136,7 +136,7 @@ void encode() {
 	coded_vector.insert(coded_vector.end(), nCoded.begin(), nCoded.end());
 
 	string sMsg = vec2string(coded_vector);
-	myArEncodeString(sMsg, outFile, model);
+	ArEncodeString(sMsg, outFile, model);
 
 	fclose(outFile);
 }

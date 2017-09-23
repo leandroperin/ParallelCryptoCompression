@@ -220,16 +220,6 @@ int nThreads;          //how many threads were ever spawn
 int nThreadCount;      //how many threads are there at execution time
 int nThreadRange;      //range of each thread (how many numbers each thread decodes)
 
-int max_in_vector(std::vector<int> vnData)
-{
-    int nMaximum = -1; //data is ASCII/UTF, so it has only positive values
-    for (int i=0; i<vnData.size(); i++)
-    {
-        if (vnData[i]>nMaximum) nMaximum = vnData[i];
-	 }
-    return(nMaximum);
-}
-
 std::vector<int> sort_limited_by_counts( std::vector<int> vnLimited, std::vector<int> vnData) //not used
 {
     std::vector<int> counts( vnLimited.size(), 0);

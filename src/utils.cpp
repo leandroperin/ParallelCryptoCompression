@@ -74,7 +74,9 @@ std::vector<int> generate_limited_data(std::vector<int> vnData) {
     return vnLimited;
 }
 
-std::vector<int> generate_random_key(std::vector<int> vnData, int nSeed1=10, int nSeed2=1000) {
+std::vector<int> generate_random_key(std::vector<int> vnData) {
+    int nSeed1 = 10;
+    int nSeed2 = 1000;
     std::vector<int> K(3);
 
     srand(time(NULL));
@@ -90,7 +92,18 @@ std::vector<int> generate_random_key(std::vector<int> vnData, int nSeed1=10, int
     return K;
 }
 
-std::vector<int> generate_coded_vector(std::vector<int> vnData) {
+int max_in_vector(std::vector<int> vnData)
+{
+    int nMaximum = -1;
+
+    for (int i=0; i<vnData.size(); i++) {
+        if (vnData[i]>nMaximum) nMaximum = vnData[i];
+	  }
+
+    return nMaximum;
+}
+
+std::vector<int> generate_coded_vector(std::vector<int> vnData, std::vector<int> K) {
     int rem = vnData.size() % 3;
     int ext = vnData.size() % 3 > 0 ? 1 : 0;
 
@@ -127,10 +140,10 @@ std::vector<int> generate_coded_vector(std::vector<int> vnData) {
     return vnResult;
 }
 
-string vec2string(std::vector<int> vec) {
+std::string vec2string(std::vector<int> vec) {
     std::stringstream ss;
     std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(ss," "));
-    string s = ss.str();
+    std::string s = ss.str();
     s.replace(s.end()-1,s.end(),1,(char)EOF_CHAR);
     return s;
 }

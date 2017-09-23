@@ -94,6 +94,49 @@ static void SymbolCountToProbabilityRanges(stats_t *stats)
     return;
 }
 
+static int BuildProbabilityRangeList(std::string sMsg, stats_t *stats) {
+    int c;
+    unsigned long countArray[EOF_CHAR];
+    unsigned long totalCount = 0;
+    unsigned long rescaleValue;
+
+    for (c = 0; c < EOF_CHAR; c++) {
+        countArray[c] = 0;
+    }
+
+    for (std::string::iterator it = sMsg.begin(); it < sMsg.end(); ++it) {
+        if (totalCount == ULONG_MAX) {
+            fprintf(stderr, "Error: file too large\n");
+            return -1;
+        }
+
+        countArray[(int)*it]++;
+        totalCount++;
+    }
+
+    if (totalCount >= MAX_PROBABILITY) {
+        rescaleValue = (totalCount / MAX_PROBABILITY) + 1;
+
+        for (c = 0; c < EOF_CHAR; c++) {
+            if (countArray[c] > rescaleValue)
+                countArray[c] /= rescaleValue;
+            else if (countArray[c] != 0)
+                countArray[c] = 1;
+        }
+    }
+
+    stats->ranges[0] = 0;
+    stats->cumulativeProb = 0;
+
+    for (c = 0; c < EOF_CHAR; c++) {
+        stats->ranges[UPPER(c)] = countArray[c];
+        stats->cumulativeProb += countArray[c];
+    }
+
+    SymbolCountToProbabilityRanges(stats);
+    return 0;
+}
+
 static void WriteEncodedBits(bit_file_t *bfpOut, stats_t *stats)
 {
     while (true)
@@ -131,55 +174,6 @@ static void WriteRemaining(bit_file_t *bfpOut, stats_t *stats)
         BitFilePutBit((stats->lower & MASK_BIT(1)) == 0, bfpOut);
 }
 
-static int BuildProbabilityRangeList(FILE *fpIn, stats_t *stats)
-{
-	if (fpIn == NULL)
-        return -1;
-
-    int c;
-    unsigned long countArray[EOF_CHAR];
-    unsigned long totalCount = 0;
-    unsigned long rescaleValue;
-
-    memset(countArray, 0, sizeof(countArray));
-
-    while ((c = fgetc(fpIn)) != EOF)
-    {
-        if (totalCount == ULONG_MAX)
-        {
-            fprintf(stderr, "Error: file too large\n");
-            return -1;
-        }
-
-        countArray[c]++;
-        totalCount++;
-    }
-
-    if (totalCount >= MAX_PROBABILITY)
-    {
-        rescaleValue = (totalCount / MAX_PROBABILITY) + 1;
-
-        for (c = 0; c < EOF_CHAR; c++)
-        {
-            if (countArray[c] > rescaleValue)
-                countArray[c] /= rescaleValue;
-            else if (countArray[c] != 0)
-                countArray[c] = 1;
-        }
-    }
-
-    stats->ranges[0] = 0;
-    stats->cumulativeProb = 0;
-    for (c = 0; c < EOF_CHAR; c++)
-    {
-        stats->ranges[UPPER(c)] = countArray[c];
-        stats->cumulativeProb += countArray[c];
-    }
-
-    SymbolCountToProbabilityRanges(stats);
-    return 0;
-}
-
 static void InitializeAdaptiveProbabilityRangeList(stats_t *stats)
 {
     int c;
@@ -198,36 +192,29 @@ static void InitializeAdaptiveProbabilityRangeList(stats_t *stats)
     return;
 }
 
-int ArEncodeFile(FILE *inFile, FILE *outFile, const model_t model)
+int ArEncodeString(std::string sMsg, FILE* outFile, const model_t model)
 {
     int c;
     bit_file_t *bOutFile;
     stats_t stats;
 
-    if (NULL == inFile)
-        inFile = stdin;
     if (outFile == NULL)
         bOutFile = MakeBitFile(stdout, BF_WRITE);
     else
         bOutFile = MakeBitFile(outFile, BF_WRITE);
 
-    if (NULL == bOutFile)
-    {
+    if (NULL == bOutFile) {
         fprintf(stderr, "Error: Creating binary output file\n");
         return -1;
     }
 
-    if (MODEL_STATIC == model)
-    {
-        if (0 != BuildProbabilityRangeList(inFile, &stats))
+    if (MODEL_STATIC == model) {
+        if (0 != BuildProbabilityRangeList(sMsg, &stats))
         {
-            fclose(inFile);
             BitFileClose(bOutFile);
             fprintf(stderr, "Error determining frequency ranges.\n");
             return -1;
         }
-
-        rewind(inFile);
 
         WriteHeader(bOutFile, &stats);
     }
@@ -238,8 +225,8 @@ int ArEncodeFile(FILE *inFile, FILE *outFile, const model_t model)
     stats.upper = ~0;
     stats.underflowBits = 0;
 
-    while ((c = fgetc(inFile)) != EOF)
-    {
+    for (std::string::iterator it = sMsg.begin(); it < sMsg.end(); ++it) {
+        c=*it;
         ApplySymbolRange(c, &stats, model);
         WriteEncodedBits(bOutFile, &stats);
     }
