@@ -209,28 +209,23 @@ static void InitializeAdaptiveProbabilityRangeList(stats_t *stats)
     return;
 }
 
-int ArDecodeFile(FILE *inFile, FILE *outFile, const model_t model)
-{
+std::string ArDecodeFile(FILE *inFile, const model_t model) {
+    std::string sOut = "";
     int c;
     probability_t unscaled;
     bit_file_t *bInFile;
     stats_t stats;
 
-    if (NULL == outFile)
-        outFile = stdout;
-
-    if (NULL == inFile)
-    {
+    if (NULL == inFile) {
         fprintf(stderr, "Error: Invalid input file\n");
-        return -1;
+        return sOut;
     }
 
     bInFile = MakeBitFile(inFile, BF_READ);
 
-    if (NULL == bInFile)
-    {
+    if (NULL == bInFile) {
         fprintf(stderr, "Error: Unable to create binary input file\n");
-        return -1;
+        return sOut;
     }
 
     if (MODEL_STATIC == model)
@@ -238,8 +233,7 @@ int ArDecodeFile(FILE *inFile, FILE *outFile, const model_t model)
         if (0 != ReadHeader(bInFile, &stats))
         {
             BitFileClose(bInFile);
-            fclose(outFile);
-            return -1;
+            return sOut;
         }
     }
     else
@@ -247,17 +241,16 @@ int ArDecodeFile(FILE *inFile, FILE *outFile, const model_t model)
 
     InitializeDecoder(bInFile, &stats);
 
-    while (true)
-    {
+    while (true) {
         unscaled = GetUnscaledCode(&stats);
 
-        if((c = GetSymbolFromProbability(unscaled, &stats)) == -1)
+        if ((c = GetSymbolFromProbability(unscaled, &stats)) == -1)
             break;
 
         if (c == EOF_CHAR)
             break;
 
-        fputc((char)c, outFile);
+        sOut += c;
 
         ApplySymbolRange(c, &stats, model);
         ReadEncodedBits(bInFile, &stats);
@@ -265,5 +258,5 @@ int ArDecodeFile(FILE *inFile, FILE *outFile, const model_t model)
 
     inFile = BitFileToFILE(bInFile);
 
-    return 0;
+    return sOut;
 }

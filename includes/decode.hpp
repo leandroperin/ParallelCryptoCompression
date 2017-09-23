@@ -5,6 +5,7 @@
 *                             INCLUDED FILES
 ***************************************************************************/
 #include "consts.hpp"
+#include <string>
 /***************************************************************************
 *                               FUNCTIONS
 ***************************************************************************/
@@ -16,6 +17,6 @@ static probability_t GetUnscaledCode(stats_t *stats);
 static int GetSymbolFromProbability(probability_t probability, stats_t *stats);
 static void ReadEncodedBits(bit_file_t *bfpIn, stats_t *stats);
 static void InitializeAdaptiveProbabilityRangeList(stats_t *stats);
-int ArDecodeFile(FILE *inFile, FILE *outFile, const model_t model);
+std::string ArDecodeFile(FILE *inFile, const model_t model);
 
 #endif

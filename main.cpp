@@ -14,6 +14,7 @@ model_t model;
 vector<int> nData;
 vector<int> nLimited;
 vector<int> nCoded;
+vector<int> nDecoded;
 vector<int> K(3);
 
 void initializeData() {
@@ -142,7 +143,30 @@ void encode() {
 }
 
 void decode() {
+	string sMsg = ArDecodeFile(inFile, model);
+	fclose(inFile);
 
+	vector<int> data = string2vec(sMsg);
+
+	K[0] = data[0]; K[1] = data[1]; K[2] = data[2];
+	int nL = data[3]; int nC = data[4];
+	int iFirst = 5; int iLast = 5 + nL; int iLen = iLast - iFirst;
+
+	nLimited.resize(iLen);
+	memcpy(&nLimited[0], &data[iFirst], iLen*sizeof(int));
+
+	iFirst = iLast; iLast = iFirst + nC; iLen = iLast - iFirst;
+
+	nCoded.resize(iLen);
+	memcpy(&nCoded[0], &data[iFirst], iLen*sizeof(int));
+
+	nDecoded = decode_vector(nCoded, nLimited, K);
+
+	for (int i = 0; i < nDecoded.size(); i++) {
+		fprintf(outFile, "%c", nDecoded[i]);
+	}
+
+	fclose(outFile);
 }
 
 int main(int argc, char *argv[]) {

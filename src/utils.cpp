@@ -147,3 +147,51 @@ std::string vec2string(std::vector<int> vec) {
     s.replace(s.end()-1,s.end(),1,(char)EOF_CHAR);
     return s;
 }
+
+std::vector<int> string2vec(std::string sMsg) {
+    std::vector<int> vOut;
+    std::istringstream is(sMsg);
+    int n;
+    while(is >> n)
+    	vOut.push_back( n );
+    return vOut;
+}
+
+std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited, std::vector<int> K) {
+  std::vector<int> nDecoded;
+  int nLastIndex  = cdata.size();
+  nDecoded.resize(3*nLastIndex-3);
+
+  for (int r = 0; r < nLastIndex; r++) {
+    for (int i = 0; i < nLimited.size(); i++) {
+      for (int j = 0; j < nLimited.size(); j++) {
+        for (int k = 0; k < nLimited.size(); k++) {
+          if (r != nLastIndex - 1)
+            if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k]) {
+              nDecoded[3*r] = nLimited[i];
+              nDecoded[3*r+1] = nLimited[j];
+              nDecoded[3*r+2] = nLimited[k];
+              break;
+            }
+          else {
+            if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k] ) {
+              nDecoded[3*r+1]  = nLimited[j];
+              nDecoded[3*r+2]  = nLimited[k];
+              nDecoded[3*r]  = nLimited[i];
+              break;
+            } else if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j]) {
+              nDecoded[3*r]  = nLimited[i];
+              nDecoded[3*r+1]  = nLimited[j];
+              break;
+            } else if (cdata[r] == K[0]*nLimited[i]) {
+              nDecoded[3*r]  = nLimited[i];
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return nDecoded;
+}
