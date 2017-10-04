@@ -5,7 +5,7 @@ static int ReadHeader(bit_file_t *bfpIn, stats_t *stats)
     int c;
     probability_t count;
 
-    PrintDebug(("HEADER:\n"));
+    // PrintDebug(("HEADER:\n"));
     stats->cumulativeProb = 0;
 
     memset(stats->ranges, 0, sizeof(stats->ranges));
@@ -21,7 +21,7 @@ static int ReadHeader(bit_file_t *bfpIn, stats_t *stats)
             return -1;
         }
 
-        PrintDebug(("%02X\t%d\n", c, count));
+        // PrintDebug(("%02X\t%d\n", c, count));
 
         if (count == 0)
             break;
@@ -95,9 +95,9 @@ static void SymbolCountToProbabilityRanges(stats_t *stats)
     for (c = 1; c <= UPPER(EOF_CHAR); c++)
         stats->ranges[c] += stats->ranges[c - 1];
 
-    PrintDebug(("Ranges:\n"));
-    for (c = 0; c < UPPER(EOF_CHAR); c++)
-        PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
+    // PrintDebug(("Ranges:\n"));
+    // for (c = 0; c < UPPER(EOF_CHAR); c++)
+        // PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
 
     return;
 }
@@ -202,9 +202,9 @@ static void InitializeAdaptiveProbabilityRangeList(stats_t *stats)
 
     stats->cumulativeProb = UPPER(EOF_CHAR);
 
-    PrintDebug(("Ranges:\n"));
-    for (c = 0; c < UPPER(EOF_CHAR); c++)
-        PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
+    // PrintDebug(("Ranges:\n"));
+    // for (c = 0; c < UPPER(EOF_CHAR); c++)
+        // PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
 
     return;
 }

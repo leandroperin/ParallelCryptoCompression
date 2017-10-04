@@ -5,7 +5,7 @@ static void WriteHeader(bit_file_t *bfpOut, stats_t *stats)
     int c;
     probability_t previous = 0;
 
-    PrintDebug(("HEADER:\n"));
+    // PrintDebug(("HEADER:\n"));
 
     for(c = 0; c <= (EOF_CHAR - 1); c++)
     {
@@ -13,7 +13,7 @@ static void WriteHeader(bit_file_t *bfpOut, stats_t *stats)
         {
             BitFilePutChar((char)c, bfpOut);
             previous = (stats->ranges[UPPER(c)] - previous);
-            PrintDebug(("%02X\t%d\n", c, previous));
+            // PrintDebug(("%02X\t%d\n", c, previous));
 
             BitFilePutBitsNum(bfpOut, &previous, (PRECISION - 2), sizeof(probability_t));
 
@@ -87,9 +87,9 @@ static void SymbolCountToProbabilityRanges(stats_t *stats)
     for (c = 1; c <= UPPER(EOF_CHAR); c++)
         stats->ranges[c] += stats->ranges[c - 1];
 
-    PrintDebug(("Ranges:\n"));
-    for (c = 0; c < UPPER(EOF_CHAR); c++)
-        PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
+    // PrintDebug(("Ranges:\n"));
+    // for (c = 0; c < UPPER(EOF_CHAR); c++)
+        // PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
 
     return;
 }
@@ -185,9 +185,9 @@ static void InitializeAdaptiveProbabilityRangeList(stats_t *stats)
 
     stats->cumulativeProb = UPPER(EOF_CHAR);
 
-    PrintDebug(("Ranges:\n"));
-    for (c = 0; c < UPPER(EOF_CHAR); c++)
-        PrintDebug(("%02X\t%d\t%d\n", c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
+    // PrintDebug(("Ranges:\n"));
+    // for (c = 0; c < UPPER(EOF_CHAR); c++)
+        // PrintDebug(("%02X\t%d\t%d\n"/, c, stats->ranges[LOWER(c)], stats->ranges[UPPER(c)]));
 
     return;
 }
