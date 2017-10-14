@@ -171,7 +171,7 @@ static void ReadEncodedBits(bit_file_t *bfpIn, stats_t *stats)
 
     while (true)
     {
-    	if ((stats->upper & MASK_BIT(0)) != (stats->lower & MASK_BIT(0)))
+      if ((stats->upper & MASK_BIT(0)) != (stats->lower & MASK_BIT(0))) {
     		if ((stats->lower & MASK_BIT(1)) && !(stats->upper & MASK_BIT(1)))
     		{
     			stats->lower &= ~(MASK_BIT(0) | MASK_BIT(1));
@@ -180,6 +180,7 @@ static void ReadEncodedBits(bit_file_t *bfpIn, stats_t *stats)
     		}
     		else
     			return;
+      }
 
         stats->lower <<= 1;
         stats->upper <<= 1;

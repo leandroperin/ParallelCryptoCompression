@@ -1,7 +1,7 @@
-#include "includes/encode.hpp"
-#include "includes/decode.hpp"
-#include "includes/optlist.hpp"
-#include "includes/utils.hpp"
+#include "../includes/encode.hpp"
+#include "../includes/decode.hpp"
+#include "../includes/optlist.hpp"
+#include "../includes/utils.hpp"
 #include <iostream>
 
 using namespace std;

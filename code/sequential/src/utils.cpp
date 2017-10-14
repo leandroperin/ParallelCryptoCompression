@@ -166,13 +166,14 @@ std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited
     for (int i = 0; i < nLimited.size(); i++) {
       for (int j = 0; j < nLimited.size(); j++) {
         for (int k = 0; k < nLimited.size(); k++) {
-          if (r != nLastIndex - 1)
+          if (r != nLastIndex - 1){
             if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k]) {
               nDecoded[3*r] = nLimited[i];
               nDecoded[3*r+1] = nLimited[j];
               nDecoded[3*r+2] = nLimited[k];
               break;
             }
+	  }
           else {
             if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k] ) {
               nDecoded[3*r+1]  = nLimited[j];
