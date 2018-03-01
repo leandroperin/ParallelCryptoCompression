@@ -123,13 +123,14 @@ void validateCommandLine(char *argv[]) {
 }
 
 void encode() {
+	cout << "Encoding file...";
+
 	nData = open_raw_file(inFile);
 	nLimited = generate_limited_data(nData);
 	K = generate_random_key(nData);
 	nCoded = generate_coded_vector(nData, K);
 
 	vector<int> coded_vector = K;
-	cout << "\nK[0], K[1], K[2] = " << K[0] << " " << K[1] << " " << K[2] << endl;
 
 	coded_vector.push_back(nLimited.size());
 	coded_vector.push_back(nCoded.size());
@@ -140,9 +141,13 @@ void encode() {
 	ArEncodeString(sMsg, outFile, model);
 
 	fclose(outFile);
+
+	cout << "DONE!" << endl;
 }
 
 void decode() {
+	cout << "Decoding file...";
+
 	string sMsg = ArDecodeFile(inFile, model);
 	fclose(inFile);
 
@@ -167,6 +172,8 @@ void decode() {
 	}
 
 	fclose(outFile);
+
+	cout << "DONE!" << endl;
 }
 
 int main(int argc, char *argv[]) {

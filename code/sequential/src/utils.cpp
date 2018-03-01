@@ -159,7 +159,7 @@ std::vector<int> string2vec(std::string sMsg) {
 
 std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited, std::vector<int> K) {
   std::vector<int> nDecoded;
-  int nLastIndex  = cdata.size();
+  int nLastIndex  = cdata.size() + 1;
   nDecoded.resize(3*nLastIndex-3);
 
   for (int r = 0; r < nLastIndex; r++) {
