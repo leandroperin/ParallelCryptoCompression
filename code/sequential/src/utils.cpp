@@ -159,22 +159,23 @@ std::vector<int> string2vec(std::string sMsg) {
 
 std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited, std::vector<int> K) {
   std::vector<int> nDecoded;
-  int nLastIndex  = cdata.size() + 1;
+  unsigned int nLastIndex  = cdata.size() + 1;
+  unsigned int nLSize = nLimited.size();
   nDecoded.resize(3*nLastIndex-3);
 
-  for (int r = 0; r < nLastIndex; r++) {
-    for (int i = 0; i < nLimited.size(); i++) {
-      for (int j = 0; j < nLimited.size(); j++) {
-        for (int k = 0; k < nLimited.size(); k++) {
-          if (r != nLastIndex - 1){
+  #pragma omp parallel for
+  for (unsigned int r = 0; r < nLastIndex; ++r) {
+    for (unsigned int i = 0; i < nLSize; ++i) {
+      for (unsigned int j = 0; j < nLSize; ++j) {
+        for (unsigned int k = 0; k < nLSize; ++k) {
+          if (r != nLastIndex - 1) {
             if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k]) {
               nDecoded[3*r] = nLimited[i];
               nDecoded[3*r+1] = nLimited[j];
               nDecoded[3*r+2] = nLimited[k];
               break;
             }
-	  }
-          else {
+	        } else {
             if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k] ) {
               nDecoded[3*r+1]  = nLimited[j];
               nDecoded[3*r+2]  = nLimited[k];
