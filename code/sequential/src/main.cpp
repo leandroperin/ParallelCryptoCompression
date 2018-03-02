@@ -11,11 +11,11 @@ FILE *inFile, *outFile;
 bool toEncode;
 model_t model;
 
-vector<int> nData;
-vector<int> nLimited;
-vector<int> nCoded;
-vector<int> nDecoded;
-vector<int> K(3);
+vector<unsigned int> nData;
+vector<unsigned int> nLimited;
+vector<unsigned int> nCoded;
+vector<unsigned int> nDecoded;
+vector<unsigned int> K(3);
 
 void initializeData() {
 	inFile = NULL;
@@ -130,7 +130,7 @@ void encode() {
 	K = generate_random_key(nData);
 	nCoded = generate_coded_vector(nData, K);
 
-	vector<int> coded_vector = K;
+	vector<unsigned int> coded_vector = K;
 
 	coded_vector.push_back(nLimited.size());
 	coded_vector.push_back(nCoded.size());
@@ -151,23 +151,23 @@ void decode() {
 	string sMsg = ArDecodeFile(inFile, model);
 	fclose(inFile);
 
-	vector<int> data = string2vec(sMsg);
+	vector<unsigned int> data = string2vec(sMsg);
 
 	K[0] = data[0]; K[1] = data[1]; K[2] = data[2];
-	int nL = data[3]; int nC = data[4];
-	int iFirst = 5; int iLast = 5 + nL; int iLen = iLast - iFirst;
+	unsigned int nL = data[3]; unsigned int nC = data[4];
+	unsigned int iFirst = 5; unsigned int iLast = 5 + nL; unsigned int iLen = iLast - iFirst;
 
 	nLimited.resize(iLen);
-	memcpy(&nLimited[0], &data[iFirst], iLen*sizeof(int));
+	memcpy(&nLimited[0], &data[iFirst], iLen*sizeof(unsigned int));
 
 	iFirst = iLast; iLast = iFirst + nC; iLen = iLast - iFirst;
 
 	nCoded.resize(iLen);
-	memcpy(&nCoded[0], &data[iFirst], iLen*sizeof(int));
+	memcpy(&nCoded[0], &data[iFirst], iLen*sizeof(unsigned int));
 
 	nDecoded = decode_vector(nCoded, nLimited, K);
 
-	for (int i = 0; i < nDecoded.size(); i++) {
+	for (unsigned int i = 0; i < nDecoded.size(); i++) {
 		fprintf(outFile, "%c", nDecoded[i]);
 	}
 
