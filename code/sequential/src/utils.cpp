@@ -159,8 +159,8 @@ std::vector<int> string2vec(std::string sMsg) {
 
 std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited, std::vector<int> K) {
   std::vector<int> nDecoded;
-  int nLastIndex  = cdata.size() + 1;
-  nDecoded.resize(3*nLastIndex-3);
+  int nLastIndex  = cdata.size();
+  nDecoded.resize(3*nLastIndex);
 
   for (int r = 0; r < nLastIndex; r++) {
     for (int i = 0; i < nLimited.size(); i++) {
@@ -176,16 +176,18 @@ std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited
 	  }
           else {
             if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k] ) {
-              nDecoded[3*r+1]  = nLimited[j];
-              nDecoded[3*r+2]  = nLimited[k];
-              nDecoded[3*r]  = nLimited[i];
+              nDecoded[3*r] = nLimited[i];
+              nDecoded[3*r+1] = nLimited[j];
+              nDecoded[3*r+2] = nLimited[k];
               break;
             } else if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j]) {
               nDecoded[3*r]  = nLimited[i];
               nDecoded[3*r+1]  = nLimited[j];
+              nDecoded.resize(3*nLastIndex-1);
               break;
             } else if (cdata[r] == K[0]*nLimited[i]) {
               nDecoded[3*r]  = nLimited[i];
+              nDecoded.resize(3*nLastIndex-2);
               break;
             }
           }

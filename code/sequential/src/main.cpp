@@ -123,8 +123,6 @@ void validateCommandLine(char *argv[]) {
 }
 
 void encode() {
-	cout << "Encoding file...";
-
 	nData = open_raw_file(inFile);
 	nLimited = generate_limited_data(nData);
 	K = generate_random_key(nData);
@@ -142,12 +140,10 @@ void encode() {
 
 	fclose(outFile);
 
-	cout << "DONE!" << endl;
+	cout << "ENCODING DONE!" << endl;
 }
 
 void decode() {
-	cout << "Decoding file...";
-
 	string sMsg = ArDecodeFile(inFile, model);
 	fclose(inFile);
 
@@ -173,7 +169,7 @@ void decode() {
 
 	fclose(outFile);
 
-	cout << "DONE!" << endl;
+	cout << "DECODING DONE!" << endl;
 }
 
 int main(int argc, char *argv[]) {
