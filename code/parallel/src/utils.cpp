@@ -165,31 +165,44 @@ std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited
 
   #pragma omp parallel for
   for (unsigned int r = 0; r < nLastIndex; ++r) {
+    int cdatar = cdata[r];
+
     for (unsigned int i = 0; i < nLSize; ++i) {
+      int nLimited_i = K[0] * nLimited[i];
+
       for (unsigned int j = 0; j < nLSize; ++j) {
+        int nLimited_j = K[1] * nLimited[j];
+
         for (unsigned int k = 0; k < nLSize; ++k) {
+
           if (r != nLastIndex - 1) {
-            if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k]) {
+            if (cdatar == nLimited_i + nLimited_j + K[2]*nLimited[k]) {
               nDecoded[3*r] = nLimited[i];
               nDecoded[3*r+1] = nLimited[j];
               nDecoded[3*r+2] = nLimited[k];
-              break;
+
+              i = j = nLSize; break; // break all loops
             }
 	        } else {
-            if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j] + K[2]*nLimited[k]) {
+            if (cdatar == nLimited_i + nLimited_j + K[2]*nLimited[k]) {
               nDecoded[3*r] = nLimited[i];
               nDecoded[3*r+1] = nLimited[j];
               nDecoded[3*r+2] = nLimited[k];
-              break;
-            } else if (cdata[r] == K[0]*nLimited[i] + K[1]*nLimited[j]) {
+
+              i = j = nLSize; break; // break all loops
+            } else if (cdatar == nLimited_i + nLimited_j) {
               nDecoded[3*r]  = nLimited[i];
               nDecoded[3*r+1]  = nLimited[j];
+
               nDecoded.resize(3*nLastIndex-1);
-              break;
-            } else if (cdata[r] == K[0]*nLimited[i]) {
+
+              i = j = nLSize; break; // break all loops
+            } else if (cdatar == nLimited_i) {
               nDecoded[3*r]  = nLimited[i];
+
               nDecoded.resize(3*nLastIndex-2);
-              break;
+
+              i = j = nLSize; break; // break all loops
             }
           }
         }
