@@ -1,0 +1,354 @@
+\chapter{Fundamentação Teórica}
+\label{cap2}
+
+\section{Computação Paralela}
+
+Há muito tempo o mercado de tecnologia vem buscando cada vez mais velocidade de processamento. Várias áreas demandam muito poder computacional para executar suas tarefas, desde o sequenciamento de DNA até simulações do universo, e para isso necessitam cada vez mais de um maior desempenho.
+
+Antigamente, o aumento de desempenho estava diretamente atrelado ao aumento da frequência dos processadores. Porém, este aumento atingiu um limite físico para a velocidade do relógio. Quando mais rápida a frequência de relógio, menor deve ser o processador, pois os sinais elétricos devem ir e voltar dentro do mesmo ciclo de relógio. A solução para isso poderia ser a construção de uma \cpu cada vez menor, porém isso causa problemas de aquecimento, afinal uma maior frequência de relógio gera mais calor. Com a redução do tamanho da \cpu torna-se mais complicada a dissipação de calor da mesma.
+
+Executar várias tarefas em paralelo, com várias \cpus trabalhando em conjunto, acabou sendo a forma encontrada para aumentar o poder computacional das máquinas. Hoje em dia já é possível encontrar arquiteturas paralelas com milhares de \cpus. Essas arquiteturas podem ser classificadas em dois grandes grupos: multiprocessadores e multicomputadores. No primeiro grupo (multiprocessadores) encontram-se as arquiteturas compostas por diversas \cpus interligadas através de um barramento ou similar, permitindo assim um compartilhamento da memória principal entre todas as \cpus. Por outro lado, no segundo grupo (multicomputadores), a memória principal é distribuída. A programação paralela nessas arquiteturas é feita através do uso de linguagens de programação, como o Erlang, e \apis, como o \mpi, desenvolvidos especialmente para computação paralela \cite{Tanenbaum2015}.
+
+\subsection{Arquiteturas Paralelas}
+
+Arquiteturas paralelas podem ser classificadas segundo seu fluxo de instruções e fluxo de dados utilizando a Taxonomia de Flynn\cite{Flynn1972}. A Tabela~\ref{tab:flynn} mostra as quatro classes possíveis de arquiteturas segundo esta classificação.
+
+\begin{table}[t]
+\centering
+    \begin{tabular}{| l | p{6cm} | p{6cm} |}
+    \hline
+        & Único & Múltiplo \\ \hline
+        Único & \sisd & \simd \\ \hline
+        Múltiplo & \misd & \mimd \\ \hline
+    \end{tabular}
+    \caption{Taxonomia de Flynn}\label{tab:flynn}
+\end{table}
+
+\textbf{\sisd:} Um único fluxo de instruções trabalha em um único fluxo de dados. É a representação clássica de uma arquitetura sequencial. A Figura~\ref{fig:sisd} ilustra essa classe.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/SISD.jpg}
+    \caption{Classe SISD da Taxonomia de Flynn}\label{fig:sisd}
+\end{figure}
+
+\textbf{\simd:} Uma única instrução é responsável pelo processamento de vários dados. Define o funcionamento de processadores vetoriais e matriciais. Diversos módulos de memória são necessários, as instruções seguem organizadas sequencialmente e possui uma unidade de controle e várias unidades de processamento. A Figura~\ref{fig:simd} ilustra essa classe.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/SIMD.jpg}
+    \caption{Classe SIMD da Taxonomia de Flynn}\label{fig:simd}
+\end{figure}
+
+\textbf{\misd:} Múltiplas instruções trabalhando no mesmo fluxo de dados. Esta classe da Taxonomia de Flynn é impossível de ser colocada em prática. A Figura~\ref{fig:misd} ilustra essa classe.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/MISD.jpg}
+    \caption{Classe MISD da Taxonomia de Flynn}\label{fig:misd}
+\end{figure}
+
+\textbf{\mimd:} Múltiplas instruções trabalhando em múltiplos dados. Possui várias unidades de controle, várias unidades de processamento e vários módulos de memória. Qualquer grupo de máquinas operando em conjunto, com interação entre elas, pode ser classificado como \mimd. A Figura~\ref{fig:mimd} ilustra essa classe.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/MIMD.jpg}
+    \caption{Classe MIMD da Taxonomia de Flynn}\label{fig:mimd}
+\end{figure}
+
+Além da Taxonomia de Flynn, as arquiteturas paralelas podem ser classificadas segundo o compartilhamento de memória. Multiprocessadores trabalham com vários processadores podendo acessar a mesma memória compartilhada, enquanto nos multicomputadores cada processador possui sua própria memória, fazendo necessário o uso de uma rede de interconexão para trocar informações.
+
+\subsubsection{Multiprocessadores}
+
+Multiprocessadores são sistemas nos quais múltiplas \cpus compartilham acesso à mesma memória. Uma propriedade que forma a base da comunicação entre processadores é: uma \cpu escreve algum dado na memória e outra lê o mesmo dado. Sistemas multiprocessadores possuem algumas características únicas, como sincronização de processos e escalonamento, por exemplo. A Figura~\ref{fig:mproc} exibe graficamente a arquitetura de um multiprocessador.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/Multiprocessador.jpg}
+    \caption{Multiprocessador}\label{fig:mproc}
+\end{figure}
+
+Alguns multiprocessadores possuem a característica de que uma certa palavra de memória possa ser lida na mesma velocidade que qualquer outra palavra. Essas máquinas são chamadas de \uma. Máquinas que não apresentam essa propriedade são chamadas de \numa \cite{Tanenbaum2015}.
+
+\subsubsection{Multicomputadores}
+
+Multicomputadores são sistemas nos quais cada \cpu possui sua própria memória, não podendo ser diretamente acessada por nenhum outro processador. A troca de informações nesse sistema é feita através de uma rede de interconexão. A Figura~\ref{fig:mcomp} exibe graficamente a arquitetura de um multicomputador.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/Multicomputador.jpg}
+    \caption{Multicomputador}\label{fig:mcomp}
+\end{figure}
+
+O acesso à memória nos multicomputadores é classificado como \norma, afinal não é possível que uma \cpu tenha acesso à memória remota \cite{Hwang1998}.
+
+\subsubsection{Aceleradores}
+
+Uma \gpgpu, ou um acelerador, é uma placa gráfica que pode ser usada para computação de propósito geral. São classificados como \simd pela Taxonomia de Flynn, permitindo que vários dados possam ser processados em paralelo. As placas atuais utilizam uma extensão desse conceito, chamada de \simt, garantindo a execução da mesma instrução em threads diferentes. A Figura~\ref{fig:acel} exibe graficamente a arquitetura de um acelerador.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/gpgpu.jpg}
+    \caption{Acelerador}\label{fig:acel}
+\end{figure}
+
+\gpgpus são compostas por vários processadores, que possuem vários núcleos cada, sendo que cada processador possui sua própria memória interna, compartilhada pelas suas \alus, e uma memória compartilhada entre todos os processadores \cite{Miranda2010}.
+
+\subsection{Programação Paralela}
+
+A seguir serão apresentados os principais meios de desenvolvimento de aplicações paralelas para multiprocessadores, multicomputadores e aceleradores.
+
+\subsubsection{Programação para Multiprocessadores}
+
+A principal \api de desenvolvimento de aplicações paralelas para multiprocessadores é o \openMP. O \openMP é baseado em diretivas de compilação, podendo ser usado em C/C++ ou em Fortran, combinando regiões sequenciais e paralelas no mesmo código fonte. As diretivas permitem a criação de regiões paralelas nas quais múltiplas threads são criadas e executadas em paralelo. O número de threads em uma região paralela pode ser determinado pelo usuário. Todavia, em programas paralelos utiliza-se normalmente uma thread para cada núcleo de processamento da arquitetura.
+
+Para C/C++ as diretivas são da seguinte maneira:
+\begin{center}
+\texttt{\#pragma omp [diretiva] [atributos]}
+\end{center}
+
+A Figura~\ref{fig:lstopenmp} exemplifica a soma de dois vetores utilizando o \openMP. Neste exemplo, a diretiva \texttt{parallel} foi usada para iniciar uma região paralela, enquanto a diretiva \texttt{for} serviu para paralelizar o laço, dividindo a execução das iterações do mesmo em várias \textit{threads}. Foram declarados 3 vetores, e depois os vetores \texttt{a} e \texttt{b} foram somados e o resultado da soma foi armazenado no vetor \texttt{c}.
+
+Variáveis globais são compartilhadas entre as threads, porém variáveis criadas dentro de um laço são privadas. O sucesso do \openMP se deve ao fato de que ele é bem simples de ser usado e, por conta de uma alta aceitação, consegue ser executado em várias plataformas diferentes \cite{Chapman2008}.
+
+\subsubsection{Programação para Multicomputadores}
+
+A principal \api de desenvolvimento de aplicações paralelas para multicomputadores é o \mpi. O \mpi permite que dados sejam transmitidos entre processos em um ambiente de memória distribuída. As principais características do \mpi são portabilidade do código fonte, implementação eficiente, várias funcionalidades e suporte à arquiteturas paralelas heterogêneas.
+
+\begin{figure}[t]
+    \centering
+    \begin{lstlisting}
+    int main(int argc, char *argv[]) {
+        int a[1000], b[1000], c[1000];
+    
+        initialize_vectors(&a, &b);
+    
+        #pragma omp parallel for
+        for (int i = 0; i < 1000; i++)
+            c[i] = a[i] + b[i];
+                
+        return 0;
+    }
+    \end{lstlisting}
+    \caption{Exemplo da soma de vetores em OpenMP.}
+    \label{fig:lstopenmp}
+\end{figure}
+
+Programas escritos em Fortran ou C/C++ são compilados normalmente, porém ligados com a biblioteca \mpi. O \mpi fornece funções do tipo \texttt{send} e \texttt{receive} síncronas e assíncronas para fazer a comunicação entre os processos. Além disso, ele oferece funções específicas e otimizadas para comunicação em grupo. Basicamente, as funções de envio e recebimento recebem como entrada os dados a serem transmitidos (assim como seu tipo e a quantidade de dados), o destinatário/remetente, entre outras.
+
+A Figura~\ref{fig:lstmpi} exemplifica a soma de dois vetores utilizando o \mpi. Nas linhas 2 a 3 é feita a declaração das variáveis necessárias, no caso os vetores \texttt{a}, \texttt{b}, \texttt{c} e duas variáveis de controle que serão inicializadas pelo MPI (linhas 7 a 8) e conterão o \textit{rank} do processo \mpi (\texttt{rank}) e a quantidade total de processos \mpi (\texttt{size}). O ambiente paralelo do \mpi é inicializado na linha 4. A linha 11 é somente executada pelo processo \mpi cujo \textit{rank} é igual à 0 e servirá para inicializar os vetores. As linhas 13 e 14 calculam a quantidade de elementos que cada processo irá receber. As linhas 16 a 19 usam o \texttt{Scatter}, que é uma função do \mpi que divide o vetor em partes iguais, no caso com a quantidade de elementos calculada anteriormente, e envia cada uma dessas partes para um processo diferente. As linhas 21 a 23 somam os vetores divididos e salvam o resultado num vetor temporário. Cada processo terá seu próprio resultado, independente dos outros processos. Nas linhas 25 e 26 é utilizada a função \texttt{Allgather}, que faz cada processo enviar sua parte do resultado calculado para todos os outros processos, juntando todas as partes e formando o vetor completo que contém o resultado final da soma, no caso o vetor \texttt{c}. A linha 28, por fim, encerra o ambiente paralelo do \mpi.
+
+O \mpi não é uma implementação, mas sim uma especificação, possuindo diversas implementações diferentes. Uma das mais utilizadas implementações que existem atualmente é o OpenMPI, uma biblioteca de código aberto que implementa o \mpi \cite{Gropp1999}.
+
+\begin{figure}[t]
+    \centering
+    \begin{lstlisting}
+    int main(int argc, char *argv[]) {
+        int a[1000], b[1000], c[1000];
+        int rank, size;
+        
+        MPI_Init(&argc, &argv);
+        
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+        MPI_Comm_size(MPI_COMM_WORLD, &size);
+        
+        if(rank == 0)
+            initialize_vectors(&a, &b);
+        
+        int elements_per_proc = 1000 / size;
+        int sub_a[elements_per_proc], sub_b[elements_per_proc];
+    
+        MPI_Scatter(a, elements_per_proc, MPI_INT, &sub_a,
+                    elements_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
+        MPI_Scatter(b, elements_per_proc, MPI_INT, &sub_b,
+                    elements_per_proc, MPI_INT, 0, MPI_COMM_WORLD);
+    
+        int temp[elements_per_proc];
+        for (i = 0; i < elements_per_proc; i++)
+            temp[i] = sub_a[i] + sub_b[i];
+        
+        MPI_Allgather(&temp, elements_per_proc, MPI_INT,
+                   c, elements_per_proc, MPI_INT, MPI_COMM_WORLD);
+        
+        MPI_Finalize();
+        
+        return 0;
+    }
+    \end{lstlisting}
+    \caption{Exemplo da soma de vetores em MPI}
+    \label{fig:lstmpi}
+\end{figure}
+
+\subsubsection{Programação para Aceleradores}
+
+A principal \api de desenvolvimento para aceleradores é o \cuda, tecnologia da NVIDIA. A ideia é que os desenvolvedores possam usar o processamento da \gpu para computação de propósito geral. A palavra chave \texttt{global} mostra para o compilador que a função a seguir será executada na \gpu. O \cuda também oferece funções para alocar dinamicamente dados na memória da \gpu, podendo alocar com a função \texttt{cudaMalloc()} e depois liberar com a função \texttt{cudaFree()} \cite{Sanders2010}.
+
+A Figura~\ref{fig:lstcuda} exemplifica a soma de dois vetores, vistos anteriormente em \openMP e \mpi, porém utilizando a tecnologia \cuda. As linhas 1 a 5 utilizam o prefixo \texttt{global}, cujo objetivo é informar que o código da função será executado na \gpu. A função \texttt{add} é chamada da seguinte forma: \texttt{$add\lll N,1 \ggg$}, onde o parâmetro \texttt{N} é o número de blocos que serão criados pela \gpu para executar em paralelo. A variável \texttt{blockIdx.x} informa qual bloco está sendo executado. O código \texttt{if (tid < 1000)} garante que não haverá acesso ao lixo de memória, no caso de existir mais blocos de \gpu do que elementos para serem calculados. As linhas 8 e 9 declaram os vetores e variáveis necessários. As linhas 11 a 13 são responsáveis por alocar a memória da \gpu utilizando a função \texttt{cudaMalloc()}. As linhas 17 a 20 copiam os vetores \texttt{a} e \texttt{b} para a \gpu. A linha 22 chama a função \texttt{add} que será executada na placa gráfica. As linhas 24 e 25 copiam o vetor \texttt{c} de volta para a \cpu. As linhas 27 a 29 liberam a memória alocada na \gpu usando a função \texttt{cudaFree()} e finalizam a execução do programa.
+
+\begin{figure}[t]
+    \centering
+    \begin{lstlisting}
+    __global__ void add(int *a, int *b, int *c) {
+        int tid = blockIdx.x;
+        if (tid < 1000)
+            c[tid] = a[tid] + b[tid];
+    }
+    
+    int main( void ) {
+        int a[1000], b[1000], c[1000];
+        int *dev_a, *dev_b, *dev_c;
+        
+        HANDLE_ERROR(cudaMalloc((void**)&dev_a, 1000 * sizeof(int)));
+        HANDLE_ERROR(cudaMalloc((void**)&dev_b, 1000 * sizeof(int)));
+        HANDLE_ERROR(cudaMalloc((void**)&dev_c, 1000 * sizeof(int)));
+        
+        initialize_vectors(&a, &b);
+        
+        HANDLE_ERROR(cudaMemcpy(dev_a, a, 1000 * sizeof(int),
+                                cudaMemcpyHostToDevice));
+        HANDLE_ERROR(cudaMemcpy(dev_b, b, 1000 * sizeof(int),
+                                cudaMemcpyHostToDevice));
+                                
+        add<<<1000,1>>>(dev_a, dev_b, dev_c);
+        
+        HANDLE_ERROR(cudaMemcpy(c, dev_c, 1000 * sizeof(int),
+                                cudaMemcpyDeviceToHost));
+                                
+        cudaFree(dev_a);
+        cudaFree(dev_b);
+        cudaFree(dev_c);
+        
+        return 0;
+    }
+    \end{lstlisting}
+
+    \caption{Exemplo da soma de vetores em CUDA}
+    \label{fig:lstcuda}
+\end{figure}
+
+Para compilar o código usando o compilador CUDA C++ basta executar:
+\begin{center}
+\texttt{nvcc add.cu -o add\_cuda}
+\end{center}
+
+\section{Criptografia de Dados}
+
+Do grego \textit{Kriptos} (oculto) e \textit{Grapho} (escrita), é o nome dado à ciência de codificar e decodificar mensagens. Tem como meta garantir:
+\begin{itemize}
+    \item \textbf{Autenticação}: Identificar o remetente da mensagem;
+    \item \textbf{Integridade}: Não adulteração da mensagem original;
+    \item \textbf{Não Recusa}: Remetente não pode negar que enviou a mensagem.
+\end{itemize}
+
+A criptografia pode ser classificada como simétrica ou assimétrica, dependendo de como as chaves de codificação e decodificação são utilizadas. Há também o resumo criptográfico, ou Hash, que é um número pequeno que representa todo um documento \cite{Stallings2014}.
+
+\subsection{Criptografia Simétrica}
+
+O conceito mais antigo de criptografia é chamado de criptografia simétrica. Neste modelo a chave que dá acesso à mensagem é a mesma, tanto para codificar como para decodificar a mensagem, e deve permanecer em segredo, por isso é chamada de chave privada. A chave é utilizada para evitar que terceiros tenham acesso à mensagem, mesmo conhecendo o algoritmo utilizado e tendo em mãos a mensagem cifrada. A Figura~\ref{fig:cripsim} exibe o funcionamento da criptografia simétrica.
+
+A maior vantagem da criptografia simétrica é sua facilidade de uso e velocidade para executar os algoritmos criptográficos. O problema deste modelo é que a chave usada para cifrar precisa ser compartilhada com o destinatário, abrindo uma brecha para terceiros interceptarem a chave \cite{Stallings2014}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/Simetrica.jpg}
+    \caption{Criptografia Simétrica}\label{fig:cripsim}
+\end{figure}
+
+Os principais algoritmos de criptografia simétrica são:
+\begin{itemize}
+    \item \aes: Desenvolvido pelo \textit{National Institute of Standards and Technology}, é o algoritmo padrão usado pelo governo dos Estados Unidos da América. Possui um tamanho de bloco fixo em 128 bits, chave de 128, 192 ou 256 bits, rápido e fácil de executar e utiliza pouca memória.
+    \item \des: Desenvolvido pela IBM em 1977, foi o algoritmo mais utilizado no mundo até a padronização do \aes. Possui um tamanho de chave pequeno, de apenas 56 bits, o que possibilita quebrar o algoritmo por força bruta. A partir de 1993 passou a ser recomendada a utilização do 3DES, uma variação do \des no qual o ciframento é feito 3 vezes seguidas, porém é muito lento para se tornar um algoritmo padrão.
+\end{itemize}
+
+\subsection{Criptografia Assimétrica}
+
+Modelo desenvolvido pelo matemático Clifford Cocks, no qual as chaves para cifrar e decifrar são diferentes, chamadas de assimétricas. A chave pública pode ser vista por qualquer pessoa, porém a chave privada permanece em posse apenas do titular. Uma pessoa pode utilizar sua chave privada para decodificar uma mensagem criptografada com sua chave pública. A Figura~\ref{fig:cripasim} exibe o funcionamento da criptografia assimétrica.
+
+A maior vantagem deste modelo é a segurança, uma vez que a chave privada não é compartilhada. Porém a velocidade é muito menor do que os algoritmos simétricos, o que pode não permitir o seu uso em algumas situações \cite{Stallings2014}.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/Assimetrica.jpg}
+    \caption{Criptografia Assimétrica}\label{fig:cripasim}
+\end{figure}
+
+Os principais algoritmos de criptografia assimétrica são:
+\begin{itemize}
+    \item \rsa: Desenvolvido em 1977 no \mitt. É o algoritmo assimétrico mais utilizado no momento, além de ser um dos mais poderosos que existem. É baseado no fato de que dois números primos são facilmente multiplicados para gerar um terceiro número, porém é muito difícil recuperar esses números a partir do terceiro número. Para se descobrir a chave privada, é necessário fatorar números muito grandes, o que pode levar um tempo considerável. Assim, a segurança do RSA é baseada na dificuldade de fatoração de números primos grandes.
+    \item \elgamal: Baseado em grandes cálculos matemáticos. Sua segurança é baseada na dificuldade de calcular logaritmos discretos em um corpo finito.
+    \item \dhes: Mais antigo dos métodos assimétricos, também é baseado no problema dos logaritmos discretos. Não é possível usá-lo para assinaturas digitais.
+\end{itemize}
+
+\subsection{Resumo Criptográfico}
+
+Resumo criptográfico, também conhecido por hash, são funções criptográficas unidirecionais, ou seja, não é possível obter o conteúdo original a partir do hash. Uma característica dessas funções é que, independente do tamanho do texto, hash sempre terá um tamanho fixo, geralmente de 128 bits. Outra propriedade é que duas mensagens distintas não irão gerar o mesmo hash \cite{Pfleeger2015}.
+
+Os principais algoritmos de hash utilizados atualmente são:
+\begin{itemize}
+    \item \mdd: Desenvolvido por Ron Rivest, do \mitt. Produz um hash de 128 bits. É um algoritmo rápido, simples e seguro, porém não é recomendado devido ao pequeno tamanho de 128 bits, sendo preferível um hash de maior valor.
+    \item \sha: Criado pela \nsa, gera um hash de 160 bits. É recomendável o uso do \sha-2, uma variação mais forte e segura do que o \sha-1, devido ao maior número de bits que é gerado.
+\end{itemize}
+
+Alguns usos de funções de hash são:
+
+\begin{itemize}
+    \item \textbf{Verificar integridade de arquivos}: Basta tirar o hash de um arquivo e guardá-lo. Em um momento futuro é possível tirar o hash novamente e comparar com o antigo, se forem iguais então o arquivo está íntegro.
+    \item \textbf{Armazenamento de senhas}: A forma mais segura de armazenar uma senha é armazenar o hash da mesma, afinal não é possível obter a senha original. Quando precisar ser feita a verificação se uma senha digitada está correta, basta comparar o hash da senha digitada com o hash armazenado, se forem iguais então a senha está correta.
+\end{itemize}
+
+\section{Compressão de Dados}
+
+Comprimir dados é o ato de reduzir o tamanho de arquivos, diminuindo o espaço que eles ocupam em disco e aumentando o desempenho de aplicativos que usam esses dados. Essa técnica é interessante para diversos fins, desde um usuário de smartphone que deseja armazenar mais fotos no seu aparelho até um serviço \textit{web} que envia muitos dados através da internet. A Figura~\ref{fig:compression} mostra o conceito da compressão de dados.
+
+Existem duas formas de compressão, com perdas e sem perdas, que descartam partes insignificantes do arquivo ou mantém todo o conteúdo, respectivamente.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics{Images/Compressao.jpg}
+    \caption{Compressão de Dados}\label{fig:compression}
+\end{figure}
+
+\subsection{Compressão sem Perdas}
+
+A compressão sem perdas, ou \textit{Lossless Data Compression}, garante que os dados obtidos após a descompressão serão exatamente iguais aos dados originais que foram comprimidos. Essa técnica é geralmente utilizada quando não se pode perder nada do conteúdo original, como arquivos de texto ou informações delicadas de experimentos científicos por exemplo.
+
+\subsection{Compressão com Perdas}
+
+A compressão com perdas, ou \textit{Lossy Data Compression}, garante que os dados obtidos após a descompressão serão bastante parecidos com o conteúdo original, com diferenças mínimas. Essa técnica é geralmente utilizada para arquivos de áudio ou vídeo, nos quais a diferença de conteúdo é imperceptível e o tamanho é reduzido consideravelmente.
+
+\subsection{Compressão de Textos}
+
+A compressão de textos se baseia em representar o texto original de outra maneira, usando símbolos que ocupem menos espaço. Com isso se ganha também velocidade ao se fazer busca em grandes documentos. A desvantagem é o tempo necessário para a descompressão do conteúdo.
+
+Um dos métodos mais conhecidos é o método de Huffman, de 1952. Nele, um código único é associado a cada caractere diferente do texto. Códigos menores são associados com os caracteres que aparecem com maior frequência. É o método mais eficiente para compressão de textos em linguagem natural, com 60\% de redução no tamanho do arquivo. O método de Huffman elimina todos os espaços entre palavras. No momento da descompressão, a não ser que exista um separador, como uma vírgula, um espaço é inserido entre as palavras \cite{Salomon2007}.
+
+\subsection{Compressão de Imagens}
+
+Existem formatos de imagens que comprimem com ou sem perdas. Os mais conhecidos formatos de compressão sem perdas são \png, \jpegg e \tiff.
+
+A compressão sem perdas explora a redundância entre pixeis e garante que nenhum dado será perdido. É especialmente importante em casos nos quais a fidelidade dos dados é muito importante, como para a fotografia profissional. Os algoritmos mais usados são o \rle, \lz, \lzw e o algoritmo de Huffman, o qual é usado nos formatos \png e \tiff.
+
+
+Dentre os métodos com perdas, os mais conhecidos são \jpeg e \gif. A compressão com perdas busca eliminar detalhes que não são perceptíveis ao olho humano. Porém há formatos, como o \gif, que utilizam um grau maior de perda, causando uma degradação grande na imagem.
+
+%\subsubsection{A Transformada DCT}
+%
+%A transformada discreta do cosseno é similar à transformada de Fourier, porém utiliza apenas números reais. É esperado que os pixeis de uma imagem tenham uma transição contínua de um para outro. A \dct consiste em encontrar uma base na qual os primeiros elementos terão pouca variação, e os últimos terão grande variação. Assim, podemos escrever os pixeis da imagem como uma combinação linear da base, na qual os últimos coeficientes são praticamente nulos, podendo ser eliminados.
+%
+%Como uma imagem é representada como uma matriz de pixeis, é utilizada a \dct bidimensional, no qual a transformada é aplicada primeiramente nas linhas e depois nas colunas. A equação da transformada para uma imagem \textit{P} de tamanho \textit{n X n} é dada pela seguinte equação \cite{ahmed1974}:
+%
+%\begin{equation}
+%    Gij=\frac{1}{\sqrt{2n}}CiCj\sum_{x=0}^{n-1}\sum_{y=o}^{n-1} Pxy \;  \cos\bigg(\frac{(2y+1)j\pi}{2n}\bigg) \;  %\cos\bigg(\frac{(2x+1)i\pi}{2n}\bigg)
+%\end{equation}
+%para $$0 \leqslant i, j \leqslant n-1$$
+%onde $$Cf=\frac{1}{\sqrt{2}}, f=0\quad ou \quad Cf=1,f>0$$
+%
+%A recuperação dos dados originais é feita através da transformação inversa, conhecida por \idct bidimensional:
+%
+%\begin{equation}
+%    Pxy=\frac{1}{4}\sum_{i=0}^{n-1}\sum_{j=0}^{n-1}CiCjCij \;
+%    \cos\bigg(\frac{(2x+1)i\pi}{2n}\bigg) \;
+%    \cos\bigg(\frac{(2y+1)j\pi}{2n}\bigg)
+%\end{equation}
+%
+%\todo[inline]{Aqui vale um comentário. A fórmula é bonita, mas sabes explicá-la? Simplesmente colocar uma fórmula no texto e não saber explicá-la não faz muito sentido. Nesse caso, aqui precisa ser adicionado um texto para explicar as duas equações apresentadas anteriormente.}

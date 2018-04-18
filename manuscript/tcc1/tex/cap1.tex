@@ -1,0 +1,41 @@
+\chapter{Introdução}
+\label{cap1}
+
+Serviços como o YouTube, Instagram, Facebook, dentre outros, possuem uma enorme quantidade de dados armazenados, incluindo texto, imagens e vídeos. Com o aumento no uso de serviços como esses, maior tráfego de dados através da rede e necessidade de armazenamento cada vez maiores, são requeridos métodos mais eficientes para compressão de imagens e vídeos, com alta qualidade de reconstrução e redução na quantidade de armazenamento necessária para os dados \cite{shu13715}.
+
+Atualmente existem diversos algoritmos que comprimem imagens. Alguns garantem fidelidade máxima, chamados de compressão sem perdas, que é o caso dos formatos \png e \tiff, enquanto outros acabam perdendo parte da imagem original, chamados de compressão com perdas, que é o caso dos formatos \jpeg e \gif. Vale mencionar que esses algoritmos não fazem uso de criptografia, eles apenas comprimem as imagens \cite{Salomon2007}.
+
+Portanto, a disponibilidade de um algoritmo de compressão e cifragem de dados mais eficiente, que consiga reduzir mais o tamanho dos arquivos, comprimir e criptografar de forma rápida, e ainda assim mantendo um bom desempenho na recuperação dos dados é algo que melhoraria bastante o uso de serviços com alto tráfego de informações. Tal algoritmo tornaria os serviços em nuvem mais populares, afinal deixaria os mesmos mais rápidos e seguros, encorajando o desenvolvimento de cada vez mais aplicativos que fazem uso de muitos dados \cite{Stallings2014}.
+
+Um algoritmo de cripto-compressão de dados, denominado \gmpr \cite{shu13715}, foi proposto recentemente por pesquisadores da \textit{Sheffield Hallam University}. O \gmpr faz uso de técnicas de cifragem para garantir a segurança dos dados ao mesmo tempo que busca reduzir o tamanho dos arquivos.
+
+Embora o algoritmo de cripto-compressão em questão funcione corretamente, ele ainda demora um tempo considerável para processar conteúdos grandes, como imagens de alta resolução ou textos com milhares de linhas, o que torna inviável o uso do mesmo em aplicações que exigem resposta rápida aos usuários.
+
+\section{Objetivos}
+
+Com base no exposto, são apresentados a seguir o objetivo geral e os objetivos específicos do presente projeto.
+
+\subsection{Objetivo Geral}
+
+O objetivo geral deste TCC é propor e implementar uma versão paralela eficiente do algoritmo de cripto-compressão \gmpr desenvolvido pela \textit{Sheffield Hallam University} para processadores paralelos tais como \textit{multicores} e \gpus. A solução proposta permitirá reduzir significativamente o tempo de execução do algoritmo de cripto-compressão \gmpr.
+
+\subsection{Objetivos Específicos}
+
+Os objetivos específicos são listados a seguir:
+
+\begin{itemize}
+\item Produzir um código sequencial limpo e organizado do algoritmo \gmpr em C++ com base na implementação existente em Matlab \cite{shu13715};
+\item Propor uma solução paralela para o algoritmo para arquiteturas \textit{multicore};
+\item Propor uma solução paralela do algoritmo para \gpus;
+\item Realizar experimentos com o intuito de medir o desempenho das soluções propostas em diferentes processadores \textit{multicore} e \gpus.
+\end{itemize}
+
+\section{Justificativa}
+
+Este trabalho se insere em uma colaboração inicial entre o Laboratório de Pesquisa em Sistemas Distribuídos (LaPeSD) da UFSC e a \textit{Sheffield Hallam University} (Reino Unido), proponente e desenvolvedora do algoritmo \gmpr. A necessidade de paralelizar o código veio de seus problemas de desempenho, o que inviabiliza o uso em aplicações reais. Esse algoritmo funcionando de forma eficiente e entregando rapidamente o resultado aos usuários é algo que iria reduzir problemas de armazenamento e segurança dos dados, pois poderia cifrar e comprimir os mesmos, recuperando-os corretamente no futuro, sem se tornar um gargalo na aplicação. Este trabalho poderá, também, ser integrado facilmente em projetos futuros que tenham restrições de infraestrutura, necessidade de maior velocidade de processamento ou maior segurança das informações, dentre outras razões.
+
+Este TCC permitirá estudar as melhores técnicas de computação paralela que possam auxiliar no desenvolvimento do trabalho proposto. Tais técnicas serão utilizadas no projeto, implementadas e testadas para que se possa escolher uma ou mais que se mostrem adequadas para o desenvolvimento do trabalho.
+
+\section{Organização do Texto}
+
+O texto deste trabalho será organizado da seguinte forma. A Seção~\ref{cap2} apresenta e descreve a fundamentação teórica deste trabalho. A Seção~\ref{cap3} apresenta o algoritmo de cripto-compressão \gmpr, incluindo suas principais ideias e pseudo-código. Então, a Seção~\ref{cap4} apresenta algumas ideias e possibilidades de paralelização do algoritmo \gmpr para arquiteturas \textit{multicore} e \gpus. A Seção~\ref{cap5} apresenta as atividades e o que será feito em cada uma delas. Por fim, as principais observações a serem feitas a respeito do trabalho a ser desenvolvido e possíveis melhorias e usos deste trabalho em projetos futuros são descritas na Seção~\ref{cap6}.
