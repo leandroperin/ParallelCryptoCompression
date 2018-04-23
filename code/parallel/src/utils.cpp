@@ -163,7 +163,7 @@ std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited
   unsigned int nLSize = nLimited.size();
   nDecoded.resize(3*nLastIndex);
 
-  #pragma omp parallel for
+  #pragma omp parallel for schedule(dynamic, 10)
   for (unsigned int r = 0; r < nLastIndex; ++r) {
     int cdatar = cdata[r];
 
