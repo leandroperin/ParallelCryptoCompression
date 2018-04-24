@@ -167,6 +167,7 @@ std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited
   for (unsigned int r = 0; r < nLastIndex; ++r) {
     int cdatar = cdata[r];
 
+    #pragma omp collapse(3) nowait
     for (unsigned int i = 0; i < nLSize; ++i) {
       int nLimited_i = K[0] * nLimited[i];
 
