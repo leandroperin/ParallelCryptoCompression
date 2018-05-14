@@ -46,12 +46,23 @@ std::vector<int> open_raw_file(FILE *fp) {
 
 bool is_in(int n, std::vector<int> vnData) {
     bool bResult = false;
-
-    for (int i = 0; i < vnData.size(); i++) {
-        if (n == vnData[i])
-          bResult = true;
+    int id, chunk, remaining;
+    
+    #pragma omp parallel shared(bResult) private(chunk, remaining, id)
+    {
+      id = omp_get_thread_num();
+      chunk = vnData.size() / omp_get_num_threads();
+      remaining = vnData.size() % omp_get_num_threads();
+      
+      int start = id * chunk;
+      int stop = (id < omp_get_num_threads() - 1) ? (id + 1) * chunk : vnData.size();
+      
+      for (int i = start; (i < stop) && (bResult == false); i++) {
+          if (n == vnData[i])
+            bResult = true;
+      }
     }
-
+    
     return bResult;
 }
 
