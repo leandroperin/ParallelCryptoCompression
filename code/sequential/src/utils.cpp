@@ -45,14 +45,7 @@ std::vector<int> open_raw_file(FILE *fp) {
 }
 
 bool is_in(int n, std::vector<int> vnData) {
-    bool bResult = false;
-
-    for (int i = 0; i < vnData.size(); i++) {
-        if (n == vnData[i])
-          bResult = true;
-    }
-
-    return bResult;
+    return std::find(vnData.begin(), vnData.end(), n) != vnData.end();
 }
 
 std::vector<int> generate_limited_data(std::vector<int> vnData) {

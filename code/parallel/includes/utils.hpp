@@ -5,6 +5,7 @@
 *                             INCLUDED FILES
 ***************************************************************************/
 #include <vector>
+#include <algorithm>
 #include <string>
 #include <sstream>
 #include <iterator>
