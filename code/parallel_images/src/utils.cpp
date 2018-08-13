@@ -1,5 +1,4 @@
 #include "../includes/utils.hpp"
-#include <string>
 
 std::vector<int> open_raw_file(FILE *fp) {
     long lSize;
@@ -162,16 +161,11 @@ std::vector<int> string2vec(std::string sMsg) {
 }
 
 std::string vec2compactstring(std::vector<int> vec) {
-    std::string s;
-    for (int i=0; i<vec.size(); i++)
-    {
-        int a=vec.at(i);
-        std::stringstream ss;
-        ss << a;
-        std::string str = ss.str();
-        s+=str;
-    }
-    return s;
+    std::ostringstream vts;
+
+    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(vts));
+
+    return vts.str();
 }
 
 std::vector<int> compactstring2vec(std::string szString, int nDigits) {
