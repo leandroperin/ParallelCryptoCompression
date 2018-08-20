@@ -23,99 +23,107 @@ std::vector<int> string2vec(std::string sMsg) {
 
 std::vector<int> compactstring2vec(std::string szString, int nDigits) {
     std::vector<int> vOut;
-    for (int i=nDigits; i<=szString.size(); i+=nDigits)
-    {
-        std::string szx = szString.substr(i-nDigits,nDigits);
+    for (int i = nDigits; i <= szString.size(); i += nDigits) {
+        std::string szx = szString.substr(i - nDigits, nDigits);
         std::istringstream buffer(szx);
         int value;
         buffer >> value;
-        vOut.push_back( value );
+        vOut.push_back(value);
     }
     return vOut;
 }
 
 std::vector<int> decode_vector_binary(std::vector<int> cdata, std::vector<int> nUnique, std::vector<int> K) {
-  std::vector<int> nDecoded;
+    std::vector<int> nDecoded;
 
-    //this function only works for positive integers 0,1,2,3,...
-    //Pre-multiply unique vector by the triple key
     std::vector<int>nUniqueK0 = nUnique;
-    std::transform(nUniqueK0.begin(), nUniqueK0.end(), nUniqueK0.begin(), std::bind1st(std::multiplies<int>(),K[0]));
+    std::transform(nUniqueK0.begin(), nUniqueK0.end(), nUniqueK0.begin(), std::bind1st(std::multiplies<int>(), K[0]));
     std::vector<int>nUniqueK1 = nUnique;
-    std::transform(nUniqueK1.begin(), nUniqueK1.end(), nUniqueK1.begin(), std::bind1st(std::multiplies<int>(),K[1]));
+    std::transform(nUniqueK1.begin(), nUniqueK1.end(), nUniqueK1.begin(), std::bind1st(std::multiplies<int>(), K[1]));
     std::vector<int>nUniqueK2 = nUnique;
-    std::transform(nUniqueK2.begin(), nUniqueK2.end(), nUniqueK2.begin(), std::bind1st(std::multiplies<int>(),K[2]));
+    std::transform(nUniqueK2.begin(), nUniqueK2.end(), nUniqueK2.begin(), std::bind1st(std::multiplies<int>(), K[2]));
 
-    for (int i=0; i<cdata.size(); i++) //for each item to be decoded by binary search
-    {
-        std::vector<int>::iterator low,high; //find a narrow range for low and high indices, the answer is between those
-        low  = std::lower_bound (nUniqueK2.begin(), nUniqueK2.end(), cdata.at(i));
-        high = std::upper_bound (nUniqueK2.begin(), nUniqueK2.end(), cdata.at(i));
-        int low2, high2;
-        low2  = int(low  - nUniqueK2.begin()-1);
-        high2 = int(high - nUniqueK2.begin()  );
-        if (low2<0) low2=0; //avoid negative indices
-        if (high2>nUnique.size()-1) high2 = int(nUnique.size()-1); //avoid out of bounds
+    for (int i = 0; i < cdata.size(); i++) {
+        auto low  = std::lower_bound(nUniqueK2.begin(), nUniqueK2.end(), cdata.at(i));
+        auto high = std::upper_bound(nUniqueK2.begin(), nUniqueK2.end(), cdata.at(i));
+
+        int low2  = int(low  - nUniqueK2.begin()-1);
+        int high2 = int(high - nUniqueK2.begin());
+
+        if (low2 < 0)
+          low2 = 0;
+
+        if (high2 > nUnique.size() - 1)
+          high2 = int(nUnique.size() - 1);
+
         int carryover2 = cdata.at(i) - abs(nUniqueK2.at(low2));
-        for (int j=low2; j<=high2; j++)
-        {
+
+        for (int j = low2; j <= high2; j++) {
             int carryover = cdata.at(i) - abs(nUniqueK2.at(j));
-            if (carryover == 0)
-            {
+            if (carryover == 0) {
                 carryover2 = 0;
                 low2 = j;
                 break;
             }
         }
 
+        low  = std::lower_bound(nUniqueK1.begin(), nUniqueK1.end(), carryover2);
+        high = std::upper_bound(nUniqueK1.begin(), nUniqueK1.end(), carryover2);
 
-        low  = std::lower_bound (nUniqueK1.begin(), nUniqueK1.end(), carryover2);
-        high = std::upper_bound (nUniqueK1.begin(), nUniqueK1.end(), carryover2);
-        int low1, high1;
-        low1  = int(low  - nUniqueK1.begin()-1);
-        high1 = int(high - nUniqueK1.begin()  );
-        if (low1<0) low1=0;
-        if (high1>nUnique.size()-1) high1 = int(nUnique.size()-1);
+        int low1  = int(low  - nUniqueK1.begin()-1);
+        int high1 = int(high - nUniqueK1.begin());
+
+        if (low1 < 0)
+          low1 = 0;
+
+        if (high1 > nUnique.size() - 1)
+          high1 = int(nUnique.size() - 1);
+
         int carryover1 = carryover2 - abs(nUniqueK1.at(low1));
-        for (int j=low1; j<=high1; j++)
-        {
+        for (int j=low1; j<=high1; j++) {
             int carryover = carryover2 - abs(nUniqueK1.at(j));
-            if (carryover == 0)
-            {
+            if (carryover == 0) {
                 carryover1 = 0;
                 low1 = j;
                 break;
             }
         }
 
-
         low  = std::lower_bound (nUniqueK0.begin(), nUniqueK0.end(), carryover1);
         high = std::upper_bound (nUniqueK0.begin(), nUniqueK0.end(), carryover1);
-        int low0, high0;
-        low0  = int(low  - nUniqueK0.begin()-1);
-        high0 = int(high - nUniqueK0.begin()  );
-        if (low0<0) low0=0;
-        if (high0>nUnique.size()-1) high0 = int(nUnique.size()-1);
 
+        int low0  = int(low  - nUniqueK0.begin()-1);
+        int high0 = int(high - nUniqueK0.begin());
 
-        for (int k0=low0; k0<=high0; k0++) //now we have our narrow ranges, determine which is which
-        {
-            for (int k1=low1; k1<=high1; k1++)
-            {
-                for (int k2=low2; k2<=high2; k2++)
-                {
-                    if ( (nUniqueK0.at(k0) + nUniqueK1.at(k1) + nUniqueK2.at(k2)) == cdata.at(i) ) //found it!
-                    {
+        if (low0 < 0)
+          low0 = 0;
+
+        if (high0 > nUnique.size() - 1)
+          high0 = int(nUnique.size() - 1);
+
+        for (int k0 = low0; k0 <= high0; k0++) {
+            int nUnique_k0 = nUniqueK0.at(k0);
+
+            for (int k1 = low1; k1 <= high1; k1++) {
+                int nUnique_k1 = nUniqueK1.at(k1);
+
+                for (int k2 = low2; k2 <= high2; k2++) {
+                    if ((nUnique_k0 + nUnique_k1 + nUniqueK2.at(k2)) == cdata.at(i)) {
                         nDecoded.push_back( nUnique.at(k0));
                         nDecoded.push_back( nUnique.at(k1));
                         nDecoded.push_back( nUnique.at(k2));
+
+                        k0 = high0 + 1;
+                        k1 = high1 + 1;
                         break;
                     }
                 }
             }
         }
+
     }
-    return nDecoded; //decoded vector is exactly 3 times larger than cdata IFF cdata was properly coded
+
+    return nDecoded;
 }
 
 
