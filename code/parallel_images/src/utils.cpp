@@ -1,22 +1,15 @@
 #include "../includes/utils.hpp"
 
-int max_in_vector(std::vector<int> vnData)
-{
-    int nMaximum = -1;
-
-    for (int i=0; i<vnData.size(); i++) {
-        if (vnData[i]>nMaximum) nMaximum = vnData[i];
-	  }
-
-    return nMaximum;
+std::string vec2string(std::vector<int> vec) {
+    std::stringstream vts;
+    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(vts, " "));
+    return vts.str();
 }
 
-std::string vec2string(std::vector<int> vec) {
-    std::stringstream ss;
-    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(ss," "));
-    std::string s = ss.str();
-    s.replace(s.end()-1,s.end(),1,(char)EOF_CHAR);
-    return s;
+std::string vec2compactstring(std::vector<int> vec) {
+    std::ostringstream vts;
+    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(vts));
+    return vts.str();
 }
 
 std::vector<int> string2vec(std::string sMsg) {
@@ -24,21 +17,12 @@ std::vector<int> string2vec(std::string sMsg) {
     std::istringstream is(sMsg);
     int n;
     while(is >> n)
-    	vOut.push_back( n );
+    	vOut.push_back(n);
     return vOut;
-}
-
-std::string vec2compactstring(std::vector<int> vec) {
-    std::ostringstream vts;
-
-    std::copy(vec.begin(), vec.end(), std::ostream_iterator<int>(vts));
-
-    return vts.str();
 }
 
 std::vector<int> compactstring2vec(std::string szString, int nDigits) {
     std::vector<int> vOut;
-
     for (int i=nDigits; i<=szString.size(); i+=nDigits)
     {
         std::string szx = szString.substr(i-nDigits,nDigits);
@@ -49,63 +33,6 @@ std::vector<int> compactstring2vec(std::string szString, int nDigits) {
     }
     return vOut;
 }
-
-
-// std::vector<int> decode_vector(std::vector<int> cdata, std::vector<int> nLimited, std::vector<int> K) {
-//   std::vector<int> nDecoded;
-//   unsigned int nLastIndex  = cdata.size();
-//   unsigned int nLSize = nLimited.size();
-//   nDecoded.resize(3*nLastIndex);
-//
-//   #pragma omp parallel for
-//   for (unsigned int r = 0; r < nLastIndex; ++r) {
-//     int cdatar = cdata[r];
-//
-//     for (unsigned int i = 0; i < nLSize; ++i) {
-//       int nLimited_i = K[0] * nLimited[i];
-//
-//       for (unsigned int j = 0; j < nLSize; ++j) {
-//         int nLimited_j = K[1] * nLimited[j];
-//
-//         for (unsigned int k = 0; k < nLSize; ++k) {
-//
-//           if (r != nLastIndex - 1) {
-//             if (cdatar == nLimited_i + nLimited_j + K[2]*nLimited[k]) {
-//               nDecoded[3*r] = nLimited[i];
-//               nDecoded[3*r+1] = nLimited[j];
-//               nDecoded[3*r+2] = nLimited[k];
-//
-//               i = j = nLSize; break; // break all loops
-//             }
-// 	        } else {
-//             if (cdatar == nLimited_i + nLimited_j + K[2]*nLimited[k]) {
-//               nDecoded[3*r] = nLimited[i];
-//               nDecoded[3*r+1] = nLimited[j];
-//               nDecoded[3*r+2] = nLimited[k];
-//
-//               i = j = nLSize; break; // break all loops
-//             } else if (cdatar == nLimited_i + nLimited_j) {
-//               nDecoded[3*r]  = nLimited[i];
-//               nDecoded[3*r+1]  = nLimited[j];
-//
-//               nDecoded.resize(3*nLastIndex-1);
-//
-//               i = j = nLSize; break; // break all loops
-//             } else if (cdatar == nLimited_i) {
-//               nDecoded[3*r]  = nLimited[i];
-//
-//               nDecoded.resize(3*nLastIndex-2);
-//
-//               i = j = nLSize; break; // break all loops
-//             }
-//           }
-//         }
-//       }
-//     }
-//   }
-//
-//   return nDecoded;
-// }
 
 std::vector<int> decode_vector_binary(std::vector<int> cdata, std::vector<int> nUnique, std::vector<int> K) {
   std::vector<int> nDecoded;
