@@ -12,6 +12,57 @@ std::string vec2compactstring(std::vector<int> vec) {
     return vts.str();
 }
 
+std::vector<std::vector<int>> code_vector(std::vector<int> vdata) {
+    std::vector<std::vector<int>> vResult(4);
+    std::vector<int> K(3);
+    std::vector<int> vcoded;
+    std::vector<int> vunique;
+    std::vector<int> v = vdata;
+
+    int M = *max_element(vdata.begin(), vdata.end());
+    int padding = 0;
+    int remainder = v.size() % 3;
+
+    K[0] = 1;
+    K[1] = 2 + M;
+    K[2] = M*(1 + K[1]);
+
+    if (remainder == 2) {
+        v.push_back(0);
+        padding = 1;
+    } else if (remainder == 1) {
+        v.push_back(0);
+        v.push_back(0);
+        padding = 2;
+    }
+
+    #pragma omp parallel for
+    for (int j = 0; j < v.size(); j += 3) {
+        int u0 = v[j];
+        int u1 = v[j+1];
+        int u2 = v[j+2];
+
+        int coded = u0 + K[1] * u1 + K[2] * u2;
+
+        vcoded.push_back(coded);
+
+        vunique.push_back(u0);
+        vunique.push_back(u1);
+        vunique.push_back(u2);
+    }
+
+    std::sort(vunique.begin(), vunique.end());
+
+    vunique.erase(unique(vunique.begin(), vunique.end()), vunique.end());
+
+    vResult[0] = K;
+    vResult[1] = vunique;
+    vResult[2] = vcoded;
+    vResult[3].push_back(padding);
+
+    return vResult;
+}
+
 std::vector<int> string2vec(std::string sMsg) {
     std::vector<int> vOut;
     std::istringstream is(sMsg);
@@ -124,55 +175,4 @@ std::vector<int> decode_vector_binary(std::vector<int> cdata, std::vector<int> n
     }
 
     return nDecoded;
-}
-
-
-std::vector<std::vector<int> > code_vector(std::vector<int> vdata )
-{
-    ///return vResult[0] = K, vResult[1] = vUnique, vResult[2] = coded data vResult[3] = padding
-    std::vector<std::vector<int> > vResult(4);
-    ///generate key: M=max(vdata), F=1,2,3..., K1=random, K2=K1+M+F, K2=MF(K1+K2)
-    std::vector<int>  K(3);
-    int M = *max_element(vdata.begin(), vdata.end());
-    int F   = 1;
-    K.at(0) = 1;
-    K.at(1) = K.at(0) + F + M;
-    K.at(2) = F*M*(K.at(0) + K.at(1));
-
-    ///cout<<"code by triple key padding if necessary"<<endl;
-    std::vector<int> vcoded;
-    std::vector<int> vunique;
-    std::vector<int> v = vdata;
-    int padding   = 0;
-    int remainder = v.size()%3;
-    if (remainder == 2)
-    {
-        v.push_back(0); //pad one value
-        padding = 1;
-    }
-    else if (remainder == 1)
-    {
-        v.push_back(0); //pad two values
-        v.push_back(0);
-        padding = 2;
-    }
-    for (int j=0; j<v.size(); j+=3) //we know v is a multiple of 3 so wont go out of bounds
-    {
-        int u0 = v.at(j);
-        int u1 = v.at(j+1);
-        int u2 = v.at(j+2);
-        int coded   = K.at(0)*u0 + K.at(1)*u1 + K.at(2)*u2;
-        vcoded.push_back(coded); //append to vector
-        vunique.push_back(u0);
-        vunique.push_back(u1);
-        vunique.push_back(u2);
-    }
-    std::sort( vunique.begin(), vunique.end() );
-    vunique.erase( unique( vunique.begin(), vunique.end() ), vunique.end() );
-
-    vResult[0] = K;
-    vResult[1] = vunique;
-    vResult[2] = vcoded;
-    vResult[3].push_back(padding);
-    return vResult;
 }

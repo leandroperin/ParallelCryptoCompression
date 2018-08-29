@@ -695,9 +695,9 @@ string encode(cv::Mat matImg) {
     for (int i = 0; i < planesSize; i++) vnSerialized.insert(vnSerialized.end(), vnCodedNegLoc[i].begin(), vnCodedNegLoc[i].end());
     for (int i = 0; i < planesSize; i++) vnSerialized.insert(vnSerialized.end(), vnUniqueNegLoc[i].begin(), vnUniqueNegLoc[i].end());
 
-    for (int i = 0; i < planesSize; i++) szCompact +=  szCompactOneData[i];
-    for (int i = 0; i < planesSize; i++) szCompact +=  szCompactTwoData[i];
-    for (int i = 0; i < planesSize; i++) szCompact +=  szCompactThreeData[i];
+    for (int i = 0; i < planesSize; i++) szCompact += szCompactOneData[i];
+    for (int i = 0; i < planesSize; i++) szCompact += szCompactTwoData[i];
+    for (int i = 0; i < planesSize; i++) szCompact += szCompactThreeData[i];
 
     string szSerialized = vec2string(vnSerialized);
     szSerialized += " " + szCompact;
