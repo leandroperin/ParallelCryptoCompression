@@ -6,21 +6,18 @@
 #include <sys/time.h>
 #include "opencv2/opencv.hpp"
 
-using namespace cv;
-
-FILE *inFile, *outFile;
-bool toEncode;
+FILE *inFile;
 model_t model;
 
 struct timeval tic, toc;
 
 char* filePathOriginals;
 char* filePathCompressed;
-char *filePathDecompressed;
+char* filePathDecompressed;
 
-vector<int> nDecoded;
+std::vector<int> nDecoded;
 
-string read_coded_file(char* szFilePath, char* szFileName) {
+std::string read_coded_file(char* szFilePath, char* szFileName) {
 		char cFileName[256];
   	memset(cFileName, 0, sizeof cFileName);
   	strcpy(cFileName,szFilePath);
@@ -34,7 +31,7 @@ string read_coded_file(char* szFilePath, char* szFileName) {
         return NULL;
     }
 
-	string szSerialized = ArDecodeFile(inFile, model);
+	std::string szSerialized = ArDecodeFile(inFile, model);
 
 	fclose(inFile);
 
@@ -42,7 +39,7 @@ string read_coded_file(char* szFilePath, char* szFileName) {
 }
 
 void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension = "bmp") {
-		string fileout = szFilePath;
+		std::string fileout = szFilePath;
 		fileout.append("/");
 		fileout.append(szFileName);
 		fileout.append(".");
@@ -57,7 +54,7 @@ void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExt
     }
 
     if (szExtension == "jpg") {
-        vector<int> compression_params;
+        std::vector<int> compression_params;
         compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
         compression_params.push_back(100);
         cv::imwrite(fileout, img, compression_params);
@@ -68,8 +65,6 @@ void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExt
 
 void initializeData() {
 	inFile = NULL;
-	outFile = NULL;
-	toEncode = true;
 	model = MODEL_STATIC;
 
 	filePathOriginals  = "/home/lperin/imgtest/originals";
@@ -78,7 +73,7 @@ void initializeData() {
 }
 
 cv::Mat generate_quantization_matrix(int Blocksize, int R) {
-    cv::Mat Q(Blocksize, Blocksize, CV_32F, Scalar::all(0));
+    cv::Mat Q(Blocksize, Blocksize, CV_32F, cv::Scalar::all(0));
 
 		#pragma omp parallel for
     for (int r = 0; r < Blocksize; r++) {
@@ -93,11 +88,11 @@ cv::Mat generate_quantization_matrix(int Blocksize, int R) {
 }
 
 cv::Mat decode(char* filePathIn, char* fileName) {
-		string szSerialized = read_coded_file(filePathIn, fileName);
-    string szTmp, szCompact, szNumbers;
+		std::string szSerialized = read_coded_file(filePathIn, fileName);
+    std::string szTmp, szCompact, szNumbers;
 
     for (auto it=szSerialized.begin(); it!=szSerialized.end(); ++it) {
-        string szSpace { *it };
+        std::string szSpace { *it };
         szTmp += *it;
         szCompact += *it;
 
@@ -108,7 +103,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
             }
     }
 
-		vector<int> data = string2vec(szNumbers);
+		std::vector<int> data = string2vec(szNumbers);
 
     int COLS = data[0]; int ROWS = data[1]; int planes = data[2];
     int R = data[3]; int Blocksize = data[4]; int bQ = data[5];
@@ -120,52 +115,52 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     int CompactOneSize[] = {data[27], data[28], data[29]}; int CompactTwoSize[] = {data[30], data[31], data[32]};
     int CompactThreeSize[] = {data[33], data[34], data[35]};
 
-		std::vector<vector<int>> KNeg(planes);
+		std::vector<std::vector<int>> KNeg(planes);
 
 		int nStart = 36;
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = first + 3;
-				KNeg[i] = vector<int> (first, last); nStart += 3;
+				KNeg[i] = std::vector<int> (first, last); nStart += 3;
     }
 
-    std::vector<vector<int>> vnDiffDC(planes);
+    std::vector<std::vector<int>> vnDiffDC(planes);
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = data.begin() + nStart + DCheight;
-        vnDiffDC[i] = vector<int> (first, last); nStart += DCheight;
+        vnDiffDC[i] = std::vector<int> (first, last); nStart += DCheight;
     }
 
-    std::vector<vector<int>> vnDiffZeroLoc(planes);
+    std::vector<std::vector<int>> vnDiffZeroLoc(planes);
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = data.begin() + nStart + ZeroLocSize[i];
-        vnDiffZeroLoc[i] = vector<int> (first, last); nStart += ZeroLocSize[i];
+        vnDiffZeroLoc[i] = std::vector<int> (first, last); nStart += ZeroLocSize[i];
     }
 
-    std::vector<vector<int>> vnDiffTwoLoc(planes);
+    std::vector<std::vector<int>> vnDiffTwoLoc(planes);
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = data.begin() + nStart + TwoLocSize[i];
-        vnDiffTwoLoc[i] = vector<int> (first, last); nStart += TwoLocSize[i];
+        vnDiffTwoLoc[i] = std::vector<int> (first, last); nStart += TwoLocSize[i];
     }
 
-    std::vector<vector<int>> vnDiffThreeLoc(planes);
+    std::vector<std::vector<int>> vnDiffThreeLoc(planes);
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = data.begin() + nStart + ThreeLocSize[i];
-        vnDiffThreeLoc[i] = vector<int> (first, last); nStart += ThreeLocSize[i];
+        vnDiffThreeLoc[i] = std::vector<int> (first, last); nStart += ThreeLocSize[i];
     }
 
-    std::vector<vector<int>> vnCodedDiffNegLoc(planes);
+    std::vector<std::vector<int>> vnCodedDiffNegLoc(planes);
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = data.begin() + nStart + CodedNegLocSize[i];
-        vnCodedDiffNegLoc[i] = vector<int> (first, last); nStart += CodedNegLocSize[i];
+        vnCodedDiffNegLoc[i] = std::vector<int> (first, last); nStart += CodedNegLocSize[i];
     }
 
-    std::vector<vector<int>> vnUniqueNeg(planes);
+    std::vector<std::vector<int>> vnUniqueNeg(planes);
     for (int i = 0; i < planes; i++) {
         auto first = data.begin() + nStart; auto last  = data.begin() + nStart + UniqueNegSize[i];
-        vnUniqueNeg[i] = vector<int> (first, last); nStart += UniqueNegSize[i];
+        vnUniqueNeg[i] = std::vector<int> (first, last); nStart += UniqueNegSize[i];
     }
 
-    std::vector<string> szCompactOneData(planes); std::vector<string> szCompactTwoData(planes); std::vector<string> szCompactThreeData(planes);
-    std::vector<vector<int>> vnOneData(planes); std::vector<vector<int>> vnTwoData(planes); std::vector<vector<int>> vnThreeData(planes);
+    std::vector<std::string> szCompactOneData(planes); std::vector<std::string> szCompactTwoData(planes); std::vector<std::string> szCompactThreeData(planes);
+    std::vector<std::vector<int>> vnOneData(planes); std::vector<std::vector<int>> vnTwoData(planes); std::vector<std::vector<int>> vnThreeData(planes);
 
     nStart = 0;
     for (int i = 0; i < planes; i++) {
@@ -184,9 +179,9 @@ cv::Mat decode(char* filePathIn, char* fileName) {
         nStart += CompactThreeSize[i];
     }
 
-    std::vector<vector<int>> vnNonZeroData(planes); std::vector<vector<int>> vnTwoLoc(planes);
-    std::vector<vector<int>> vnThreeLoc(planes); std::vector<vector<int>> vSize(planes);
-    std::vector<vector<int>> vnDC(planes);
+    std::vector<std::vector<int>> vnNonZeroData(planes); std::vector<std::vector<int>> vnTwoLoc(planes);
+    std::vector<std::vector<int>> vnThreeLoc(planes); std::vector<std::vector<int>> vSize(planes);
+    std::vector<std::vector<int>> vnDC(planes);
 
 		#pragma omp parallel for
     for (int i = 0; i < planes; i++) {
@@ -230,16 +225,16 @@ cv::Mat decode(char* filePathIn, char* fileName) {
         }
     }
 
-    std::vector<vector<int>> vnDiffNegLoc(planes);
+    std::vector<std::vector<int>> vnDiffNegLoc(planes);
     for (int i = 0; i < planes; i++) {
-        vector<int> newVec = vnCodedDiffNegLoc[i];
+        std::vector<int> newVec = vnCodedDiffNegLoc[i];
         nDecoded = decode_vector_binary(newVec, vnUniqueNeg[i], KNeg[i]);
 
         if (nDecoded.size() > NegLocSize[i]) {
             int diff = nDecoded.size() - NegLocSize[i];
             auto first = nDecoded.begin();
             auto last  = first + nDecoded.size() - diff;
-            nDecoded = vector<int> (first, last);
+            nDecoded = std::vector<int> (first, last);
         }
 
         vnDiffNegLoc[i] = nDecoded;
@@ -258,8 +253,8 @@ cv::Mat decode(char* filePathIn, char* fileName) {
 						vnNonZeroData[i][vNegIndices[j]] *= -1;
     }
 
-    std::vector<vector<int>> vnDctACcol(planes);
-    std::vector<vector<int>> vnZeroLoc(planes);
+    std::vector<std::vector<int>> vnDctACcol(planes);
+    std::vector<std::vector<int>> vnZeroLoc(planes);
 
 		#pragma omp parallel for
     for (int i = 0; i < planes; i++) {
@@ -283,12 +278,12 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     }
 
 
-    vector<Mat> vmatPlanes(planes);
-    vector<Mat> vmatOutPlanes(planes);
+    std::vector<cv::Mat> vmatPlanes(planes);
+    std::vector<cv::Mat> vmatOutPlanes(planes);
 
 		#pragma omp parallel for schedule(dynamic, 10)
     for (int i = 0; i < planes; i++) {
-        cv::Mat img2(ROWS, COLS, CV_32F, Scalar(0));
+        cv::Mat img2(ROWS, COLS, CV_32F, cv::Scalar(0));
         int start = 0;
         int step = (Blocksize/2)*(Blocksize/2)-1;
         int dcIndex = 0; int acIndex = 0;
@@ -297,7 +292,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
             for (int c = 0; c < COLS-Blocksize; c += Blocksize) {
                 auto first = vnDctACcol[i].begin() + start;
                 auto last  = first + step;
-                vector<int> vec(first, last);
+                std::vector<int> vec(first, last);
 
                 cv::Mat roi (Blocksize/2, Blocksize/2, CV_32F);
                 int idx = 0;
@@ -341,11 +336,11 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     return mergedImg;
 }
 
-string encode(cv::Mat matImg) {
+std::string encode(cv::Mat matImg) {
     int COLS = matImg.size().width;
     int ROWS = matImg.size().height;
 
-    vector<cv::Mat> planes;
+    std::vector<cv::Mat> planes;
     split(matImg, planes);
 
 		int planesSize = planes.size();
@@ -355,7 +350,7 @@ string encode(cv::Mat matImg) {
     int bQ = 0;
     cv::Mat Q = generate_quantization_matrix(Blocksize, R);
 
-    vector<cv::Mat> matDctData(planesSize);
+    std::vector<cv::Mat> matDctData(planesSize);
 
 		#pragma omp parallel for
     for (int i = 0; i < planes.size(); i++) {
@@ -390,39 +385,39 @@ string encode(cv::Mat matImg) {
         }
     }
 
-    vector<cv::Mat> matNonZeroLocXY(planesSize);
-    vector<cv::Mat> matZeroLocXY(planesSize);
-    vector<cv::Mat> matOneLocXY(planesSize);
-    vector<cv::Mat> matTwoLocXY(planesSize);
-    vector<cv::Mat> matThreeLocXY(planesSize);
-    vector<cv::Mat> matNegLocXY(planesSize);
+    std::vector<cv::Mat> matNonZeroLocXY(planesSize);
+    std::vector<cv::Mat> matZeroLocXY(planesSize);
+    std::vector<cv::Mat> matOneLocXY(planesSize);
+    std::vector<cv::Mat> matTwoLocXY(planesSize);
+    std::vector<cv::Mat> matThreeLocXY(planesSize);
+    std::vector<cv::Mat> matNegLocXY(planesSize);
 
-    vector<cv::Mat> matDctDC(planesSize);
-    vector<cv::Mat> matDctAC(planesSize);
-    vector<cv::Mat> matDctACcol(planesSize);
-    vector<cv::Mat> matNonZeroData(planesSize);
+    std::vector<cv::Mat> matDctDC(planesSize);
+    std::vector<cv::Mat> matDctAC(planesSize);
+    std::vector<cv::Mat> matDctACcol(planesSize);
+    std::vector<cv::Mat> matNonZeroData(planesSize);
 
-    vector<vector<int>> vnDctACcol(planesSize);
-    vector<vector<int>> vnNonZeroData(planesSize);
-    vector<vector<int>> vnDC(planesSize);
-    vector<vector<int>> vnZeroLoc(planesSize);
-    vector<vector<int>> vnTwoLoc(planesSize);
-    vector<vector<int>> vnThreeLoc(planesSize);
-    vector<vector<int>> vnNegLoc(planesSize);
+    std::vector<std::vector<int>> vnDctACcol(planesSize);
+    std::vector<std::vector<int>> vnNonZeroData(planesSize);
+    std::vector<std::vector<int>> vnDC(planesSize);
+    std::vector<std::vector<int>> vnZeroLoc(planesSize);
+    std::vector<std::vector<int>> vnTwoLoc(planesSize);
+    std::vector<std::vector<int>> vnThreeLoc(planesSize);
+    std::vector<std::vector<int>> vnNegLoc(planesSize);
 
-    vector<vector<int>> vnCodedDC(planesSize);
-    vector<vector<int>> vnCodedNegLoc(planesSize);
-    vector<vector<int>> vnUniqueNegLoc(planesSize);
+    std::vector<std::vector<int>> vnCodedDC(planesSize);
+    std::vector<std::vector<int>> vnCodedNegLoc(planesSize);
+    std::vector<std::vector<int>> vnUniqueNegLoc(planesSize);
 
-    vector<vector<int>> vnOneData(planesSize);
-    vector<vector<int>> vnTwoData(planesSize);
-    vector<vector<int>> vnThreeData(planesSize);
+    std::vector<std::vector<int>> vnOneData(planesSize);
+    std::vector<std::vector<int>> vnTwoData(planesSize);
+    std::vector<std::vector<int>> vnThreeData(planesSize);
 
-    vector<string> szCompactOneData(planesSize);
-    vector<string> szCompactTwoData(planesSize);
-    vector<string> szCompactThreeData(planesSize);
+    std::vector<std::string> szCompactOneData(planesSize);
+    std::vector<std::string> szCompactTwoData(planesSize);
+    std::vector<std::string> szCompactThreeData(planesSize);
 
-    vector<vector<int>> KNegLoc(planesSize);
+    std::vector<std::vector<int>> KNegLoc(planesSize);
 
 		#pragma omp parallel for
     for (int i = 0; i < planesSize; i++) {
@@ -457,18 +452,18 @@ string encode(cv::Mat matImg) {
 				matBoolean = matDctACcol[i] == 0;
         cv::findNonZero(matBoolean, matZeroLocXY[i]);
 
-        cv::Point pt = matZeroLocXY[i].at<Point>(0);
+        cv::Point pt = matZeroLocXY[i].at<cv::Point>(0);
         int index = pt.y;
         vnZeroLoc[i].push_back(index);
 
         for (int j = 1; j < matZeroLocXY[i].size().height; j++) {
-            cv::Point pnt = matZeroLocXY[i].at<Point>(j);
+            cv::Point pnt = matZeroLocXY[i].at<cv::Point>(j);
             vnZeroLoc[i].push_back(pnt.y - index);
             index = pnt.y;
         }
 
         for (int j = 0; j < matNonZeroLocXY[i].size().height; j++) {
-            cv::Point pnt = matNonZeroLocXY[i].at<Point>(j);
+            cv::Point pnt = matNonZeroLocXY[i].at<cv::Point>(j);
             int nValue = matDctACcol[i].at<int>(pnt.y, pnt.x);
             vnNonZeroData[i].push_back(nValue);
 
@@ -481,12 +476,12 @@ string encode(cv::Mat matImg) {
 				matBoolean = matNonZeroData[i] < 0;
         cv::findNonZero(matBoolean, matNegLocXY[i]);
 
-        pt = matNegLocXY[i].at<Point>(0);
+        pt = matNegLocXY[i].at<cv::Point>(0);
         index = pt.y;
         vnNegLoc[i].push_back(index);
 
         for (int j = 1; j < matNegLocXY[i].size().height; j++) {
-            cv::Point pnt = matNegLocXY[i].at<Point>(j);
+            cv::Point pnt = matNegLocXY[i].at<cv::Point>(j);
             vnNegLoc[i].push_back(pnt.y - index);
             index = pnt.y;
         }
@@ -500,7 +495,7 @@ string encode(cv::Mat matImg) {
         cv::findNonZero(matBoolean, matOneLocXY);
 
         for (int j = 0; j < matOneLocXY.size().height; j++) {
-            cv::Point pnt = matOneLocXY.at<Point>(j);
+            cv::Point pnt = matOneLocXY.at<cv::Point>(j);
             int nValue = matAbsNonZeroAC.at<int>(pnt.y, pnt.x);
             vnOneData[i].push_back(nValue);
         }
@@ -510,7 +505,7 @@ string encode(cv::Mat matImg) {
         cv::findNonZero(matBoolean, matTwoLocXY[i]);
 
         if (matTwoLocXY[i].size().height > 0) {
-            pt = matTwoLocXY[i].at<Point>(0);
+            pt = matTwoLocXY[i].at<cv::Point>(0);
             index = pt.y;
             vnTwoLoc[i].push_back(index);
 
@@ -518,7 +513,7 @@ string encode(cv::Mat matImg) {
             vnTwoData[i].push_back(value);
 
             for (int j = 1; j < matTwoLocXY[i].size().height; j++) {
-                cv::Point pnt = matTwoLocXY[i].at<Point>(j);
+                cv::Point pnt = matTwoLocXY[i].at<cv::Point>(j);
                 vnTwoLoc[i].push_back(pnt.y - index);
                 index = pnt.y;
 
@@ -532,7 +527,7 @@ string encode(cv::Mat matImg) {
         cv::findNonZero(matBoolean, matThreeLocXY[i]);
 
         if (matThreeLocXY[i].size().height > 0) {
-            pt = matThreeLocXY[i].at<Point>(0);
+            pt = matThreeLocXY[i].at<cv::Point>(0);
             index = pt.y;
             vnThreeLoc[i].push_back(index);
 
@@ -540,7 +535,7 @@ string encode(cv::Mat matImg) {
             vnThreeData[i].push_back(value);
 
             for (int j = 1; j < matThreeLocXY[i].size().height; j++) {
-                cv::Point pnt = matThreeLocXY[i].at<Point>(j);
+                cv::Point pnt = matThreeLocXY[i].at<cv::Point>(j);
                 vnThreeLoc[i].push_back(pnt.y - index);
                 index = pnt.y;
 
@@ -553,15 +548,15 @@ string encode(cv::Mat matImg) {
         szCompactTwoData[i] = vec2compactstring(vnTwoData[i]);
         szCompactThreeData[i] = vec2compactstring(vnThreeData[i]);
 
-        vector<vector<int>> vcodednloc = code_vector(vnNegLoc[i]);
+        std::vector<std::vector<int>> vcodednloc = code_vector(vnNegLoc[i]);
 
         KNegLoc[i] = vcodednloc[0];
         vnUniqueNegLoc[i] = vcodednloc[1];
         vnCodedNegLoc[i] = vcodednloc[2];
     }
 
-    vector<int> vnSerialized;
-    string szCompact;
+    std::vector<int> vnSerialized;
+    std::string szCompact;
 
     vnSerialized.push_back(matImg.size().width);
     vnSerialized.push_back(matImg.size().height);
@@ -595,13 +590,13 @@ string encode(cv::Mat matImg) {
     for (int i = 0; i < planesSize; i++) szCompact += szCompactTwoData[i];
     for (int i = 0; i < planesSize; i++) szCompact += szCompactThreeData[i];
 
-    string szSerialized = vec2string(vnSerialized);
+    std::string szSerialized = vec2string(vnSerialized);
     szSerialized += " " + szCompact;
 
     return szSerialized;
 }
 
-void write_coded_file(char* szFilePath, char* szFileName, string szSerialized) {
+void write_coded_file(char* szFilePath, char* szFileName, std::string szSerialized) {
     char fileout[256];
     memset(fileout, 0, sizeof fileout);
     strcpy(fileout, szFilePath);
@@ -618,7 +613,7 @@ void write_coded_file(char* szFilePath, char* szFileName, string szSerialized) {
 }
 
 cv::Mat read_img_file(char* szFilePath, char* szFileName) {
-		string cFileName = szFilePath;
+		std::string cFileName = szFilePath;
 		cFileName.append("/");
 		cFileName.append(szFileName);
 
@@ -653,7 +648,7 @@ void batch_img_encode() {
 
 	        if (name[0] != 46) {
 	            cv::Mat img = read_img_file(filePathOriginals, name);
-	            string szSerialized = encode(img);
+	            std::string szSerialized = encode(img);
 	            write_coded_file(filePathCompressed, name, szSerialized);
 	        }
 	    }
