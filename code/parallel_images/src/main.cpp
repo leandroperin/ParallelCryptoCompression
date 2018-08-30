@@ -20,9 +20,51 @@ char *filePathDecompressed;
 
 vector<int> nDecoded;
 
-///Function prototypes:
-string read_coded_file( char* szFilePath, char* szFileName );
-void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension="bmp");
+string read_coded_file(char* szFilePath, char* szFileName) {
+		char cFileName[256];
+  	memset(cFileName, 0, sizeof cFileName);
+  	strcpy(cFileName,szFilePath);
+  	strcat(cFileName,"/");
+    strcat(cFileName,szFileName);
+
+    inFile = fopen(cFileName, "rb");
+
+    if (inFile == NULL) {
+        std::cout << "Cannot Open File to Decode!" << std::endl;
+        return NULL;
+    }
+
+	string szSerialized = ArDecodeFile(inFile, model);
+
+	fclose(inFile);
+
+	return szSerialized;
+}
+
+void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension = "bmp") {
+		string fileout = szFilePath;
+		fileout.append("/");
+		fileout.append(szFileName);
+		fileout.append(".");
+		fileout.append(szExtension);
+
+    DIR *dir;
+
+    if ((dir = opendir(szFilePath)) == NULL) {
+        std::cout << "Destination directory does not exist: " << szFilePath << std::endl;
+				std::cout << "File not saved: EXIT_FAILURE" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if (szExtension == "jpg") {
+        vector<int> compression_params;
+        compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
+        compression_params.push_back(100);
+        cv::imwrite(fileout, img, compression_params);
+    } else {
+        cv::imwrite(fileout, img);
+    }
+}
 
 void initializeData() {
 	inFile = NULL;
@@ -297,52 +339,6 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     cv::merge(vmatPlanes, mergedImg);
 
     return mergedImg;
-}
-
-string read_coded_file(char* szFilePath, char* szFileName) {
-		char cFileName[256];
-  	memset(cFileName, 0, sizeof cFileName);
-  	strcpy(cFileName,szFilePath);
-  	strcat(cFileName,"/");
-    strcat(cFileName,szFileName);
-
-    inFile = fopen(cFileName, "rb");
-
-    if (inFile == NULL) {
-        std::cout << "Cannot Open File to Decode!" << std::endl;
-        return NULL;
-    }
-
-	string szSerialized = ArDecodeFile(inFile, model);
-
-	fclose(inFile);
-
-	return szSerialized;
-}
-
-void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension) {
-		string fileout = szFilePath;
-		fileout.append("/");
-		fileout.append(szFileName);
-		fileout.append(".");
-		fileout.append(szExtension);
-
-    DIR *dir;
-
-    if ((dir = opendir(szFilePath)) == NULL) {
-        std::cout << "Destination directory does not exist: " << szFilePath << std::endl;
-				std::cout << "File not saved: EXIT_FAILURE" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-
-    if (szExtension == "jpg") {
-        vector<int> compression_params;
-        compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
-        compression_params.push_back(100);
-        cv::imwrite(fileout, img, compression_params);
-    } else {
-        cv::imwrite(fileout, img);
-    }
 }
 
 string encode(cv::Mat matImg) {
@@ -627,24 +623,6 @@ cv::Mat read_img_file(char* szFilePath, char* szFileName) {
 		cFileName.append(szFileName);
 
     return cv::imread(cFileName);
-}
-
-int batch_write_img_file(char* dirin, char* dirout, char* szExtension) {
-    DIR *dir;
-    struct dirent *ent;
-    if ((dir = opendir ( dirin )) == NULL) return -1;
-
-    while ((ent = readdir (dir)) != NULL) //read all file names, open, compress, and save compressed
-    {
-        char* name= ent->d_name;
-        if (name[0]!=46) //igore filenames starting with . (46='.')
-        {
-            cv::Mat img = read_img_file( dirin, name );
-            write_img_file( dirout, name, img, szExtension);
-        }
-    }
-    closedir (dir);
-    return 0;
 }
 
 void batch_img_decode() {
