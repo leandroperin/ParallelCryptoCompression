@@ -22,7 +22,7 @@ vector<int> nDecoded;
 
 ///Function prototypes:
 string read_coded_file( char* szFilePath, char* szFileName );
-int  write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension="bmp");
+void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension="bmp");
 
 void initializeData() {
 	inFile = NULL;
@@ -50,399 +50,299 @@ cv::Mat generate_quantization_matrix(int Blocksize, int R) {
     return Q;
 }
 
-cv::Mat decode(char* filePathIn, char* fileName )
-{
-	string szSerialized = read_coded_file( filePathIn, fileName );
+cv::Mat decode(char* filePathIn, char* fileName) {
+		string szSerialized = read_coded_file(filePathIn, fileName);
     string szTmp, szCompact, szNumbers;
-    for ( string::iterator it=szSerialized.begin(); it!=szSerialized.end(); ++it) //parse string
-    {
-        string szSpace;
+
+    for (auto it=szSerialized.begin(); it!=szSerialized.end(); ++it) {
+        string szSpace { *it };
         szTmp += *it;
         szCompact += *it;
-        szSpace = *it;
-        if (szSpace == " ") //we reached a separator
-        {
-            if (szTmp.size() < 10) //if a few characters then it is a number
-            {
-                //std::cout << szTmp<<endl;
+
+        if (szSpace == " ")
+            if (szTmp.size() < 10) {
                 szNumbers += szTmp;
-                szTmp      = "";
-                szCompact  = "";
+                szTmp = szCompact = "";
             }
-            else
-            {
-                //it is part of the compact string, do nothing
-            }
-        }
     }
 
-	vector<int> data = string2vec(szNumbers);
+		vector<int> data = string2vec(szNumbers);
 
-    int COLS        = data.at(0);
-    int ROWS        = data.at(1);
-    int planes      = data.at(2);
-    int R           = data.at(3);
-    int Blocksize   = data.at(4);
-    int bQ          = data.at(5);
-    int DCheight    = data.at(6);
-    int ACwidth     = data.at(7);
-    int ACheight    = data.at(8);
+    int COLS = data[0]; int ROWS = data[1]; int planes = data[2];
+    int R = data[3]; int Blocksize = data[4]; int bQ = data[5];
+    int DCheight = data[6]; int ACwidth = data[7]; int ACheight = data[8];
 
-    int ZeroLocSize[]       = {data.at(9),  data.at(10), data.at(11)};
-    int TwoLocSize[]        = {data.at(12), data.at(13), data.at(14)};
-    int ThreeLocSize[]      = {data.at(15), data.at(16), data.at(17)};
-    int NegLocSize[]        = {data.at(18), data.at(19), data.at(20)};
-    int CodedNegLocSize[]   = {data.at(21), data.at(22), data.at(23)};
-    int UniqueNegSize[]     = {data.at(24), data.at(25), data.at(26)};
-    int CompactOneSize[]    = {data.at(27), data.at(28), data.at(29)};
-    int CompactTwoSize[]    = {data.at(30), data.at(31), data.at(32)};
-    int CompactThreeSize[]  = {data.at(33), data.at(34), data.at(35)};
+    int ZeroLocSize[] = {data[9],  data[10], data[11]}; int TwoLocSize[] = {data[12], data[13], data[14]};
+    int ThreeLocSize[] = {data[15], data[16], data[17]}; int NegLocSize[] = {data[18], data[19], data[20]};
+    int CodedNegLocSize[] = {data[21], data[22], data[23]}; int UniqueNegSize[] = {data[24], data[25], data[26]};
+    int CompactOneSize[] = {data[27], data[28], data[29]}; int CompactTwoSize[] = {data[30], data[31], data[32]};
+    int CompactThreeSize[] = {data[33], data[34], data[35]};
 
-    std::vector<vector<int> > KNeg(planes);
-    int nStart = 36;
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + 3;
-        vector<int> newVec(first, last);
-        KNeg[i] = newVec;
-        nStart += 3;
+		std::vector<vector<int>> KNeg(planes);
+
+		int nStart = 36;
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = first + 3;
+				KNeg[i] = vector<int> (first, last); nStart += 3;
     }
 
-    std::vector<vector<int> > vnDiffDC(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + DCheight;
-        vector<int> newVec(first, last);
-        vnDiffDC[i] = newVec;
-        nStart += DCheight;
+    std::vector<vector<int>> vnDiffDC(planes);
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = data.begin() + nStart + DCheight;
+        vnDiffDC[i] = vector<int> (first, last); nStart += DCheight;
     }
 
-    std::vector<vector<int> > vnDiffZeroLoc(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + ZeroLocSize[i];
-        vector<int> newVec(first, last);
-        vnDiffZeroLoc[i] = newVec;
-        nStart += ZeroLocSize[i];
+    std::vector<vector<int>> vnDiffZeroLoc(planes);
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = data.begin() + nStart + ZeroLocSize[i];
+        vnDiffZeroLoc[i] = vector<int> (first, last); nStart += ZeroLocSize[i];
     }
 
-    std::vector<vector<int> > vnDiffTwoLoc(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + TwoLocSize[i];
-        vector<int> newVec(first, last);
-        vnDiffTwoLoc[i] = newVec;
-        nStart += TwoLocSize[i];
+    std::vector<vector<int>> vnDiffTwoLoc(planes);
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = data.begin() + nStart + TwoLocSize[i];
+        vnDiffTwoLoc[i] = vector<int> (first, last); nStart += TwoLocSize[i];
     }
 
-    std::vector<vector<int> > vnDiffThreeLoc(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + ThreeLocSize[i];
-        vector<int> newVec(first, last);
-        vnDiffThreeLoc[i] = newVec;
-        nStart += ThreeLocSize[i];
+    std::vector<vector<int>> vnDiffThreeLoc(planes);
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = data.begin() + nStart + ThreeLocSize[i];
+        vnDiffThreeLoc[i] = vector<int> (first, last); nStart += ThreeLocSize[i];
     }
 
-    std::vector<vector<int> > vnCodedDiffNegLoc(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + CodedNegLocSize[i];
-        vector<int> newVec(first, last);
-        vnCodedDiffNegLoc[i] = newVec;
-        nStart += CodedNegLocSize[i];
+    std::vector<vector<int>> vnCodedDiffNegLoc(planes);
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = data.begin() + nStart + CodedNegLocSize[i];
+        vnCodedDiffNegLoc[i] = vector<int> (first, last); nStart += CodedNegLocSize[i];
     }
 
-    std::vector<vector<int> > vnUniqueNeg(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        vector<int>::const_iterator first = data.begin() + nStart;
-        vector<int>::const_iterator last  = data.begin() + nStart + UniqueNegSize[i];
-        vector<int> newVec(first, last);
-        vnUniqueNeg[i] = newVec;
-        nStart += UniqueNegSize[i];
+    std::vector<vector<int>> vnUniqueNeg(planes);
+    for (int i = 0; i < planes; i++) {
+        auto first = data.begin() + nStart; auto last  = data.begin() + nStart + UniqueNegSize[i];
+        vnUniqueNeg[i] = vector<int> (first, last); nStart += UniqueNegSize[i];
     }
 
-    std::vector<string> szCompactOneData(planes);
-    std::vector<string> szCompactTwoData(planes);
-    std::vector<string> szCompactThreeData(planes);
-    std::vector<vector<int> > vnOneData(planes);
-    std::vector<vector<int> > vnTwoData(planes);
-    std::vector<vector<int> > vnThreeData(planes);
+    std::vector<string> szCompactOneData(planes); std::vector<string> szCompactTwoData(planes); std::vector<string> szCompactThreeData(planes);
+    std::vector<vector<int>> vnOneData(planes); std::vector<vector<int>> vnTwoData(planes); std::vector<vector<int>> vnThreeData(planes);
 
-    nStart=0;
-    for (int i = 0; i < planes; i++)
-    {
-        szCompactOneData[i]= szCompact.substr (nStart, CompactOneSize[i]);
+    nStart = 0;
+    for (int i = 0; i < planes; i++) {
+        szCompactOneData[i] = szCompact.substr(nStart, CompactOneSize[i]);
         vnOneData[i] = compactstring2vec(szCompactOneData[i], 1);
         nStart += CompactOneSize[i];
     }
-    for (int i = 0; i < planes; i++)
-    {
-        szCompactTwoData[i]= szCompact.substr (nStart, CompactTwoSize[i]);
+    for (int i = 0; i < planes; i++) {
+        szCompactTwoData[i] = szCompact.substr (nStart, CompactTwoSize[i]);
         vnTwoData[i] = compactstring2vec(szCompactTwoData[i], 2);
         nStart += CompactTwoSize[i];
     }
-    for (int i = 0; i < planes; i++)
-    {
+    for (int i = 0; i < planes; i++) {
         szCompactThreeData[i]= szCompact.substr (nStart, CompactThreeSize[i]);
         vnThreeData[i] = compactstring2vec(szCompactThreeData[i], 3);
         nStart += CompactThreeSize[i];
     }
 
-    ///Build the nonZeroData vectors and DC components
-    std::vector<vector<int> > vnNonZeroData(planes);
-    std::vector<vector<int> > vnTwoLoc(planes);
-    std::vector<vector<int> > vnThreeLoc(planes);
-    std::vector<vector<int> > vSize(planes);
-    std::vector<vector<int> > vnDC(planes);
+    std::vector<vector<int>> vnNonZeroData(planes); std::vector<vector<int>> vnTwoLoc(planes);
+    std::vector<vector<int>> vnThreeLoc(planes); std::vector<vector<int>> vSize(planes);
+    std::vector<vector<int>> vnDC(planes);
 
+		#pragma omp parallel for
+    for (int i = 0; i < planes; i++) {
+        int index2 = vnDiffTwoLoc[i][0];
+        int index3 = vnDiffThreeLoc[i][0];
 
-    for (int i = 0; i < planes; i++)
-    {
-        ///build the location of 2 and 3 digits
-        int index2 = vnDiffTwoLoc[i].at(0);
-        int index3 = vnDiffThreeLoc[i].at(0);
-        vnTwoLoc[i].push_back( index2 );
-        vnThreeLoc[i].push_back( index3 );
-        for (int j=1; j<vnDiffTwoLoc[i].size(); j++) //index of two digit data
-        {
-            int diff = vnDiffTwoLoc[i].at(j);
-            index2+=diff;
-            vnTwoLoc[i].push_back( index2 );
+        vnTwoLoc[i].push_back(index2);
+        vnThreeLoc[i].push_back(index3);
+
+        for (int j = 1; j < vnDiffTwoLoc[i].size(); j++) {
+            index2 += vnDiffTwoLoc[i][j];
+            vnTwoLoc[i].push_back(index2);
         }
-        for (int j=1; j<vnDiffThreeLoc[i].size(); j++)
-        {
-            int diff = vnDiffThreeLoc[i].at(j);
-            index3+=diff;
-            vnThreeLoc[i].push_back( index3 );
+        for (int j = 1; j < vnDiffThreeLoc[i].size(); j++) {
+            index3 += vnDiffThreeLoc[i][j];
+            vnThreeLoc[i].push_back(index3);
         }
 
-        int sizeNonZero = vnOneData[i].size() + vnTwoData[i].size() + vnThreeData[i].size();
-        std::vector<int> vec( sizeNonZero, -1 ); //initialized to -1
-        vnNonZeroData[i] = vec;
+        vnNonZeroData[i] = std::vector<int> (vnOneData[i].size() + vnTwoData[i].size() + vnThreeData[i].size(), -1);
 
-        ///update two digit values
-        for (int j=0; j<vnTwoLoc[i].size(); j++)
-        {
-            int index = vnTwoLoc[i].at(j);
-            vnNonZeroData[i].at(index) = vnTwoData[i].at(j);
+        for (int j = 0; j < vnTwoLoc[i].size(); j++) {
+            vnNonZeroData[i][vnTwoLoc[i][j]] = vnTwoData[i][j];
         }
-        ///update three digit values
-        for (int j=0; j<vnThreeLoc[i].size(); j++)
-        {
-            int index = vnThreeLoc[i].at(j);
-            vnNonZeroData[i].at(index) = vnThreeData[i].at(j);
+        for (int j = 0; j<vnThreeLoc[i].size(); j++) {
+            vnNonZeroData[i][vnThreeLoc[i][j]] = vnThreeData[i][j];
         }
-        ///update one digit values
-        int idx=0;
-        for (int j=0; j<vnNonZeroData[i].size(); j++)
-        {
-            if (vnNonZeroData[i].at(j) == -1)
-            {
-                vnNonZeroData[i].at(j) = vnOneData[i].at(idx);
+
+        int idx = 0;
+        for (int j = 0; j < vnNonZeroData[i].size(); j++) {
+            if (vnNonZeroData[i][j] == -1) {
+                vnNonZeroData[i][j] = vnOneData[i][idx];
                 idx++;
             }
         }
-        ///update DC components  vnDiffDC(planes);
-        int diff = vnDiffDC[i].at(0);
-        vnDC[i].push_back( diff ); //save first value as is
-        for (int j=1; j<vnDiffDC[i].size(); j++)
-        {
-            diff += vnDiffDC[i].at(j);
-            vnDC[i].push_back( diff );
+
+        int diff = vnDiffDC[i][0];
+        vnDC[i].push_back(diff);
+        for (int j = 1; j < vnDiffDC[i].size(); j++) {
+            diff += vnDiffDC[i][j];
+            vnDC[i].push_back(diff);
         }
     }
 
-    //cout<<"\nDecoding negative locations..... note that original vector may have been padded"<<endl;
-    std::vector<vector<int> > vnDiffNegLoc(planes);
-    for (int i = 0; i < planes; i++)
-    {
+    std::vector<vector<int>> vnDiffNegLoc(planes);
+    for (int i = 0; i < planes; i++) {
         vector<int> newVec = vnCodedDiffNegLoc[i];
         nDecoded = decode_vector_binary(newVec, vnUniqueNeg[i], KNeg[i]);
 
-        ///check the size of decoded vector
-        if (nDecoded.size() > NegLocSize[i]) //need to delete padded entries at the end
-        {
+        if (nDecoded.size() > NegLocSize[i]) {
             int diff = nDecoded.size() - NegLocSize[i];
-            vector<int>::const_iterator first = nDecoded.begin();
-            vector<int>::const_iterator last  = nDecoded.begin() + nDecoded.size() - diff;
-            vector<int> nVec( first, last);
-            nDecoded = nVec;
+            auto first = nDecoded.begin();
+            auto last  = first + nDecoded.size() - diff;
+            nDecoded = vector<int> (first, last);
         }
-        vnDiffNegLoc[i] = nDecoded; //update vector
 
-        ///rebuild the negative indices
+        vnDiffNegLoc[i] = nDecoded;
+
         std::vector<int> vNegIndices;
-        int index = vnDiffNegLoc[i].at(0);
+        int index = vnDiffNegLoc[i][0];
         vNegIndices.push_back(index);
-        for (int j=1; j<vnDiffNegLoc[i].size(); j++)
-        {
-            index += vnDiffNegLoc[i].at(j);
-            vNegIndices.push_back( index );
+
+        for (int j = 1; j < vnDiffNegLoc[i].size(); j++) {
+            index += vnDiffNegLoc[i][j];
+            vNegIndices.push_back(index);
         }
 
-        ///fix the negative values in vnNonZeroData
-        for (int j=0; j<vNegIndices.size(); j++)
-        {
-            index = vNegIndices.at(j);
-            vnNonZeroData[i].at(index) = -1*vnNonZeroData[i].at(index);
-        }
+				#pragma omp parallel for
+        for (int j = 0; j < vNegIndices.size(); j++)
+						vnNonZeroData[i][vNegIndices[j]] *= -1;
     }
 
-    ///Add zeros to data
-    std::vector<vector<int> > vnDctACcol(planes);
-    std::vector<vector<int> > vnZeroLoc(planes);
-    for (int i = 0; i < planes; i++)
-    {
-        int vsize = vnNonZeroData[i].size() + vnDiffZeroLoc[i].size();
-        int index0 = 0;
-        std::vector<int> vec( vsize, -1); //initialized to -1
-        for (int j=0; j<vnDiffZeroLoc[i].size(); j++)
-        {
-            int diff = vnDiffZeroLoc[i].at(j);
-            index0  += diff;
-            vec.at(index0) = 0;
+    std::vector<vector<int>> vnDctACcol(planes);
+    std::vector<vector<int>> vnZeroLoc(planes);
+
+		#pragma omp parallel for
+    for (int i = 0; i < planes; i++) {
+        std::vector<int> vec(vnNonZeroData[i].size() + vnDiffZeroLoc[i].size(), -1);
+
+				int index0 = 0;
+        for (int j = 0; j < vnDiffZeroLoc[i].size(); j++) {
+            index0 += vnDiffZeroLoc[i][j];
+            vec[index0] = 0;
         }
-        int index=0;
-        for (int j=0; j<vec.size(); j++)
-        {
-            if ( vec.at(j) == -1)
-            {
-                vec.at(j) = vnNonZeroData[i].at(index);
+
+        int index = 0;
+        for (int j = 0; j < vec.size(); j++) {
+            if ( vec[j] == -1) {
+                vec[j] = vnNonZeroData[i][index];
                 index++;
             }
         }
+
         vnDctACcol[i] = vec;
     }
 
 
-    vector<Mat> vmatPlanes(planes); //a vector of matrices
-    vector<Mat> vmatOutPlanes(planes); //a vector of matrices
+    vector<Mat> vmatPlanes(planes);
+    vector<Mat> vmatOutPlanes(planes);
+
 		#pragma omp parallel for schedule(dynamic, 10)
-    for (int i = 0; i < planes; i++)
-    {
-        Mat img2( ROWS, COLS, CV_32F, Scalar(0));
-        int start   = 0;
-        int step    = (Blocksize/2)*(Blocksize/2)-1; //steps in the vnDctACcol vector
-        int dcIndex = 0;
-        int acIndex = 0;
-				// #pragma omp parallel for
-        for (int r=0; r<ROWS-Blocksize; r+=Blocksize)
-        {
-            for (int c=0; c<COLS-Blocksize; c+=Blocksize)
-            {
-                vector<int>::const_iterator first = vnDctACcol[i].begin() + start;
-                vector<int>::const_iterator last  = vnDctACcol[i].begin() + start + step;
+    for (int i = 0; i < planes; i++) {
+        cv::Mat img2(ROWS, COLS, CV_32F, Scalar(0));
+        int start = 0;
+        int step = (Blocksize/2)*(Blocksize/2)-1;
+        int dcIndex = 0; int acIndex = 0;
+
+        for (int r = 0; r < ROWS-Blocksize; r += Blocksize) {
+            for (int c = 0; c < COLS-Blocksize; c += Blocksize) {
+                auto first = vnDctACcol[i].begin() + start;
+                auto last  = first + step;
                 vector<int> vec(first, last);
 
-                ///Reshape vector vec into a matrix
-                Mat roi (Blocksize/2, Blocksize/2, CV_32F);
-                int idx=0;
+                cv::Mat roi (Blocksize/2, Blocksize/2, CV_32F);
+                int idx = 0;
 
-                for (int j=0; j<Blocksize/2; j++)
-                {
-                    for (int k=0; k<Blocksize/2; k++)
-                    {
-                        if (j==0 & k==0)
-                        {
-                            roi.at<float>(j,k) = float(vnDC[i].at(dcIndex));
+                for (int j = 0; j < Blocksize/2; j++)
+                    for (int k = 0; k < Blocksize/2; k++)
+                        if (j == 0 & k == 0) {
+                            roi.at<float>(j, k) = float(vnDC[i][dcIndex]);
                             dcIndex++;
-                        }
-                        else
-                        {
-                            roi.at<float>(j,k) = float(vec.at(idx));
+                        } else {
+                            roi.at<float>(j,k) = float(vec[idx]);
                             idx++;
                         }
-                    }
+
+                if (bQ) {
+                     cv::Mat Q = generate_quantization_matrix(Blocksize, R);
+                     cv::multiply(roi, Q, roi);
                 }
-                if (bQ)
-                {
-                     Mat Q  = generate_quantization_matrix( Blocksize, R );
-                     multiply(roi, Q, roi);
-                }
-                roi.copyTo(img2(Rect(c, r, roi.cols, roi.rows)));
-                Mat roi2 = img2( Rect(c,r,Blocksize,Blocksize) ); //x,y,w,h
-                Mat dst;
-                idct(roi2, dst);
-                dst.convertTo(dst, CV_8UC1);
-                dst.copyTo(img2(Rect(c, r, dst.cols, dst.rows)));
-                start+=step;
+
+                roi.copyTo(img2(cv::Rect(c, r, roi.cols, roi.rows)));
+
+								cv::Mat roi2 = img2(cv::Rect(c,r,Blocksize,Blocksize) );
+                cv::Mat dst;
+
+								cv::idct(roi2, dst);
+
+								dst.convertTo(dst, CV_8UC1);
+                dst.copyTo(img2(cv::Rect(c, r, dst.cols, dst.rows)));
+
+								start += step;
             }
         }
+
         vmatPlanes[i] = img2.clone();
         vmatPlanes[i].convertTo(vmatPlanes[i], CV_8UC1);
     }
 
-    Mat mergedImg;
-    merge(vmatPlanes, mergedImg);
-        ///display for debugging purposes only
-        ///namedWindow("Reconstructed Image after compression", CV_WINDOW_AUTOSIZE);
-        ///imshow("Reconstructed Image after compression", mergedImg);
-        ///waitKey(1);
-        ///destroyAllWindows();
+    cv::Mat mergedImg;
+    cv::merge(vmatPlanes, mergedImg);
+
     return mergedImg;
 }
 
-
-
-
-string read_coded_file( char* szFilePath, char* szFileName )
-{
-    char cFileName[256];
-    memset(cFileName, 0, sizeof cFileName);   //clear array
-    strcpy(cFileName,szFilePath);             // copy string into the result
-    strcat(cFileName,"/");                    // append /
-    strcat(cFileName,szFileName);             // copy string into the result
+string read_coded_file(char* szFilePath, char* szFileName) {
+		char cFileName[256];
+  	memset(cFileName, 0, sizeof cFileName);
+  	strcpy(cFileName,szFilePath);
+  	strcat(cFileName,"/");
+    strcat(cFileName,szFileName);
 
     inFile = fopen(cFileName, "rb");
-    if (inFile == NULL)
-    {
+
+    if (inFile == NULL) {
         std::cout << "Cannot Open File to Decode!" << std::endl;
         return NULL;
     }
 
 	string szSerialized = ArDecodeFile(inFile, model);
+
 	fclose(inFile);
+
 	return szSerialized;
 }
 
-int write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension)
-{
-    char fileout[256];
-    memset(fileout, 0, sizeof fileout);     //clear array
-    strcpy(fileout,szFilePath);             // copy string into the result
-    strcat(fileout,"/");                    // append /
-    strcat(fileout,szFileName);             // copy string into the result
-    //fileout[ strlen(fileout)-4]='\0';     // remove extension .cry
-    strcat(fileout,".");                    // append extension
-    strcat(fileout,szExtension);            // append extension
+void write_img_file(char* szFilePath, char* szFileName, cv::Mat img, char* szExtension) {
+		string fileout = szFilePath;
+		fileout.append("/");
+		fileout.append(szFileName);
+		fileout.append(".");
+		fileout.append(szExtension);
 
     DIR *dir;
-    if ((dir = opendir ( szFilePath )) == NULL)
-    {
-        std::cout << "\nDestination directory does not exist! " << szFilePath <<std::endl<< "File not saved. EXIT_FAILURE"<< std::endl;
+
+    if ((dir = opendir(szFilePath)) == NULL) {
+        std::cout << "Destination directory does not exist: " << szFilePath << std::endl;
+				std::cout << "File not saved: EXIT_FAILURE" << std::endl;
         exit(EXIT_FAILURE);
     }
-    if (szExtension == "jpg")
-    {
+
+    if (szExtension == "jpg") {
         vector<int> compression_params;
         compression_params.push_back(CV_IMWRITE_JPEG_QUALITY);
         compression_params.push_back(100);
-        cv::imwrite( fileout, img, compression_params );
+        cv::imwrite(fileout, img, compression_params);
+    } else {
+        cv::imwrite(fileout, img);
     }
-    else
-    {
-        cv::imwrite( fileout, img );
-    }
-    int sizeInBytes = img.step[0] * img.rows; //size in bytes
-    return sizeInBytes;
 }
 
 string encode(cv::Mat matImg) {
@@ -748,8 +648,6 @@ int batch_write_img_file(char* dirin, char* dirout, char* szExtension) {
 }
 
 void batch_img_decode() {
-    int sizeInBytes = 0;
-
     DIR *dir;
     struct dirent *ent;
 
@@ -759,13 +657,11 @@ void batch_img_decode() {
 
 	        if (name[0]!=46) {
 	            cv::Mat imgout = decode(filePathCompressed, name);
-	            sizeInBytes += write_img_file(filePathDecompressed, name, imgout);
+	            write_img_file(filePathDecompressed, name, imgout);
 	        }
 	    }
 
 	    closedir(dir);
-
-	    std::cout << "Size of decoded directory in Bytes: " << sizeInBytes << std::endl;
 		}
 }
 
