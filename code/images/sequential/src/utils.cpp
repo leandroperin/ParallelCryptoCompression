@@ -35,8 +35,7 @@ std::vector<std::vector<int>> code_vector(std::vector<int> vdata) {
         v.push_back(0);
         padding = 2;
     }
-
-    #pragma omp parallel for
+    
     for (int j = 0; j < v.size(); j += 3) {
         int u0 = v[j];
         int u1 = v[j+1];
