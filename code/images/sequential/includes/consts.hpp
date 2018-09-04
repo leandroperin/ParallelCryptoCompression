@@ -5,6 +5,7 @@
 *                             INCLUDED FILES
 ***************************************************************************/
 #include <limits.h>
+#include <string>
 #include <string.h>
 #include <assert.h>
 #include "bitfile.hpp"
@@ -23,7 +24,7 @@
 /***************************************************************************
 *                            TYPE DEFINITIONS
 ***************************************************************************/
-typedef unsigned short probability_t; 
+typedef unsigned short probability_t;
 
 typedef enum
 {
