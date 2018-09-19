@@ -36,7 +36,6 @@ std::vector<std::vector<int>> code_vector(std::vector<int> vdata) {
         padding = 2;
     }
 
-    #pragma omp parallel for
     for (int j = 0; j < v.size(); j += 3) {
         int u0 = v[j];
         int u1 = v[j+1];
@@ -94,7 +93,6 @@ std::vector<int> decode_vector_binary(std::vector<int> cdata, std::vector<int> n
     std::vector<int>nUniqueK2 = nUnique;
     std::transform(nUniqueK2.begin(), nUniqueK2.end(), nUniqueK2.begin(), std::bind1st(std::multiplies<int>(), K[2]));
 
-    #pragma omp parallel for
     for (int i = 0; i < cdata.size(); i++) {
         auto low  = std::lower_bound(nUniqueK2.begin(), nUniqueK2.end(), cdata.at(i));
         auto high = std::upper_bound(nUniqueK2.begin(), nUniqueK2.end(), cdata.at(i));

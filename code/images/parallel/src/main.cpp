@@ -75,6 +75,7 @@ void initializeData() {
 cv::Mat generate_quantization_matrix(int Blocksize, int R) {
   cv::Mat Q(Blocksize, Blocksize, CV_32F, cv::Scalar::all(0));
 
+  #pragma omp for collapse(2)
   for (int r = 0; r < Blocksize; r++) {
     for (int c = 0; c < Blocksize; c++) {
       Q.at<float>(r,c) = (r == c == 0) ? 1 : (float)(r+c)*R;
@@ -207,8 +208,8 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     int idx = 0;
     for (int j = 0; j < vnNonZeroData[i].size(); j++) {
       if (vnNonZeroData[i][j] == -1) {
-	vnNonZeroData[i][j] = vnOneData[i][idx];
-	idx++;
+      	vnNonZeroData[i][j] = vnOneData[i][idx];
+      	idx++;
       }
     }
 
@@ -262,8 +263,8 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     int index = 0;
     for (int j = 0; j < vec.size(); j++) {
       if ( vec[j] == -1) {
-	vec[j] = vnNonZeroData[i][index];
-	index++;
+      	vec[j] = vnNonZeroData[i][index];
+      	index++;
       }
     }
 
@@ -280,41 +281,42 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     int step = (Blocksize/2)*(Blocksize/2)-1;
     int dcIndex = 0; int acIndex = 0;
 
+    #pragma omp parallel for collapse(2)
     for (int r = 0; r < ROWS-Blocksize; r += Blocksize) {
       for (int c = 0; c < COLS-Blocksize; c += Blocksize) {
-	auto first = vnDctACcol[i].begin() + start;
-	auto last  = first + step;
-	std::vector<int> vec(first, last);
+      	auto first = vnDctACcol[i].begin() + start;
+      	auto last  = first + step;
+      	std::vector<int> vec(first, last);
 
-	cv::Mat roi (Blocksize/2, Blocksize/2, CV_32F);
-	int idx = 0;
+      	cv::Mat roi (Blocksize/2, Blocksize/2, CV_32F);
+      	int idx = 0;
 
-	for (int j = 0; j < Blocksize/2; j++)
-	  for (int k = 0; k < Blocksize/2; k++)
-	    if (j == 0 & k == 0) {
-	      roi.at<float>(j, k) = float(vnDC[i][dcIndex]);
-	      dcIndex++;
-	    } else {
-	      roi.at<float>(j,k) = float(vec[idx]);
-	      idx++;
-	    }
+      	for (int j = 0; j < Blocksize/2; j++)
+      	  for (int k = 0; k < Blocksize/2; k++)
+      	    if (j == 0 & k == 0) {
+      	      roi.at<float>(j, k) = float(vnDC[i][dcIndex]);
+      	      dcIndex++;
+      	    } else {
+      	      roi.at<float>(j,k) = float(vec[idx]);
+      	      idx++;
+      	    }
 
-	if (bQ) {
-	  cv::Mat Q = generate_quantization_matrix(Blocksize, R);
-	  cv::multiply(roi, Q, roi);
-	}
+      	if (bQ) {
+      	  cv::Mat Q = generate_quantization_matrix(Blocksize, R);
+      	  cv::multiply(roi, Q, roi);
+      	}
 
-	roi.copyTo(img2(cv::Rect(c, r, roi.cols, roi.rows)));
+      	roi.copyTo(img2(cv::Rect(c, r, roi.cols, roi.rows)));
 
-	cv::Mat roi2 = img2(cv::Rect(c,r,Blocksize,Blocksize));
-	cv::Mat dst;
+      	cv::Mat roi2 = img2(cv::Rect(c,r,Blocksize,Blocksize));
+      	cv::Mat dst;
 
-	cv::idct(roi2, dst);
+      	cv::idct(roi2, dst);
 
-	dst.convertTo(dst, CV_8UC1);
-	dst.copyTo(img2(cv::Rect(c, r, dst.cols, dst.rows)));
+      	dst.convertTo(dst, CV_8UC1);
+      	dst.copyTo(img2(cv::Rect(c, r, dst.cols, dst.rows)));
 
-	start += step;
+      	start += step;
       }
     }
 
@@ -347,31 +349,32 @@ std::string encode(cv::Mat matImg) {
   for (int i = 0; i < planes.size(); i++) {
     planes[i].convertTo(planes[i], CV_32F);
 
+    #pragma omp for collapse(2)
     for (int r = 0; r < ROWS - Blocksize; r += Blocksize) {
       for (int c = 0; c < COLS - Blocksize; c += Blocksize) {
-	cv::Mat roi = planes[i](cv::Rect(c, r, Blocksize, Blocksize));
-	cv::Mat dst, dst_half;
+      	cv::Mat roi = planes[i](cv::Rect(c, r, Blocksize, Blocksize));
+      	cv::Mat dst, dst_half;
 
-	cv::dct(roi, dst);
+      	cv::dct(roi, dst);
 
-	if (bQ)
-	  cv::divide(dst, Q, dst);
+      	if (bQ)
+      	  cv::divide(dst, Q, dst);
 
-	dst_half = dst(cv::Rect(0, 0, Blocksize / 2, Blocksize / 2));
-	dst_half.convertTo(dst_half, CV_32S, 1.0, 0.0);
+      	dst_half = dst(cv::Rect(0, 0, Blocksize / 2, Blocksize / 2));
+      	dst_half.convertTo(dst_half, CV_32S, 1.0, 0.0);
 
-	cv::Mat row(1, (Blocksize / 2) * (Blocksize / 2), CV_32S);
+      	cv::Mat row(1, (Blocksize / 2) * (Blocksize / 2), CV_32S);
 
-	int idx = 0;
+      	int idx = 0;
 
-	for (int j = 0; j < dst_half.size().height; j++) {
-	  for (int k = 0; k < dst_half.size().width; k++) {
-	    row.at<int>(0, idx) = dst_half.at<int>(j, k);
-	    idx++;
-	  }
-	}
+      	for (int j = 0; j < dst_half.size().height; j++) {
+      	  for (int k = 0; k < dst_half.size().width; k++) {
+      	    row.at<int>(0, idx) = dst_half.at<int>(j, k);
+      	    idx++;
+      	  }
+      	}
 
-	matDctData[i].push_back(row);
+        matDctData[i].push_back(row);
       }
     }
   }
@@ -410,6 +413,7 @@ std::string encode(cv::Mat matImg) {
 
   std::vector<std::vector<int>> KNegLoc(planesSize);
 
+  #pragma omp parallel for schedule(guided)
   for (int i = 0; i < planesSize; i++) {
     matDctDC[i] = matDctData[i](cv::Rect(0, 0, 1, matDctData[i].rows)).clone();
     matDctAC[i] = matDctData[i](cv::Rect(1, 0, matDctData[i].cols - 1, matDctData[i].rows)).clone();
@@ -430,7 +434,7 @@ std::string encode(cv::Mat matImg) {
       matDctACcol[i].push_back(rowt);
 
       for (int k = 0; k < row.size().width; k++)
-	vnDctACcol[i].push_back(row.at<int>(0, k));
+	       vnDctACcol[i].push_back(row.at<int>(0, k));
     }
 
     cv::Mat matBoolean;
@@ -503,12 +507,12 @@ std::string encode(cv::Mat matImg) {
       vnTwoData[i].push_back(value);
 
       for (int j = 1; j < matTwoLocXY[i].size().height; j++) {
-	cv::Point pnt = matTwoLocXY[i].at<cv::Point>(j);
-	vnTwoLoc[i].push_back(pnt.y - index);
-	index = pnt.y;
+      	cv::Point pnt = matTwoLocXY[i].at<cv::Point>(j);
+      	vnTwoLoc[i].push_back(pnt.y - index);
+      	index = pnt.y;
 
-	int nValue = matAbsNonZeroAC.at<int>(index, pnt.x);
-	vnTwoData[i].push_back(nValue);
+      	int nValue = matAbsNonZeroAC.at<int>(index, pnt.x);
+      	vnTwoData[i].push_back(nValue);
       }
     }
 
@@ -525,12 +529,12 @@ std::string encode(cv::Mat matImg) {
       vnThreeData[i].push_back(value);
 
       for (int j = 1; j < matThreeLocXY[i].size().height; j++) {
-	cv::Point pnt = matThreeLocXY[i].at<cv::Point>(j);
-	vnThreeLoc[i].push_back(pnt.y - index);
-	index = pnt.y;
+      	cv::Point pnt = matThreeLocXY[i].at<cv::Point>(j);
+      	vnThreeLoc[i].push_back(pnt.y - index);
+      	index = pnt.y;
 
-	int nValue = matAbsNonZeroAC.at<int>(index, pnt.x);
-	vnThreeData[i].push_back(nValue);
+      	int nValue = matAbsNonZeroAC.at<int>(index, pnt.x);
+      	vnThreeData[i].push_back(nValue);
       }
     }
 
@@ -619,8 +623,8 @@ void batch_img_decode() {
       char* name = ent->d_name;
 
       if (name[0]!=46) {
-	cv::Mat imgout = decode(filePathCompressed, name);
-	write_img_file(filePathDecompressed, name, imgout);
+      	cv::Mat imgout = decode(filePathCompressed, name);
+      	write_img_file(filePathDecompressed, name, imgout);
       }
     }
 
@@ -637,9 +641,9 @@ void batch_img_encode() {
       char* name = ent->d_name;
 
       if (name[0] != 46) {
-	cv::Mat img = read_img_file(filePathOriginals, name);
-	std::string szSerialized = encode(img);
-	write_coded_file(filePathCompressed, name, szSerialized);
+      	cv::Mat img = read_img_file(filePathOriginals, name);
+      	std::string szSerialized = encode(img);
+      	write_coded_file(filePathCompressed, name, szSerialized);
       }
     }
 
