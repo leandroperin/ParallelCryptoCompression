@@ -89,6 +89,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   std::string szSerialized = read_coded_file(filePathIn, fileName);
   std::string szTmp, szCompact, szNumbers;
 
+  // Threads precisariam escrever em ordem nas strings
   for (auto it=szSerialized.begin(); it!=szSerialized.end(); ++it) {
     std::string szSpace { *it };
     szTmp += *it;
@@ -113,6 +114,8 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   int CompactThreeSize[] = {data[33], data[34], data[35]};
 
   std::vector<std::vector<int>> KNeg(planes);
+
+  // Não é possível agrupar os FORs por causa de dependência entre os valores
 
   int nStart = 36;
   for (int i = 0; i < planes; i++) {
@@ -180,6 +183,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   std::vector<std::vector<int>> vnThreeLoc(planes); std::vector<std::vector<int>> vSize(planes);
   std::vector<std::vector<int>> vnDC(planes);
 
+  #pragma omp parallel for schedule(dynamic, 10)
   for (int i = 0; i < planes; i++) {
     int index2 = vnDiffTwoLoc[i][0];
     int index3 = vnDiffThreeLoc[i][0];
@@ -221,6 +225,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     }
   }
 
+  // Threads possuem dependência entre os valores
   std::vector<std::vector<int>> vnDiffNegLoc(planes);
   for (int i = 0; i < planes; i++) {
     std::vector<int> newVec = vnCodedDiffNegLoc[i];
@@ -281,7 +286,6 @@ cv::Mat decode(char* filePathIn, char* fileName) {
     int step = (Blocksize/2)*(Blocksize/2)-1;
     int dcIndex = 0; int acIndex = 0;
 
-    #pragma omp parallel for collapse(2)
     for (int r = 0; r < ROWS-Blocksize; r += Blocksize) {
       for (int c = 0; c < COLS-Blocksize; c += Blocksize) {
       	auto first = vnDctACcol[i].begin() + start;
@@ -290,7 +294,6 @@ cv::Mat decode(char* filePathIn, char* fileName) {
 
       	cv::Mat roi (Blocksize/2, Blocksize/2, CV_32F);
       	int idx = 0;
-
       	for (int j = 0; j < Blocksize/2; j++)
       	  for (int k = 0; k < Blocksize/2; k++)
       	    if (j == 0 & k == 0) {
