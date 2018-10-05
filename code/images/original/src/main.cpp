@@ -994,7 +994,6 @@ int batch_img_decode(char* dirin, char* dirout)
         }
     }
     closedir (dir);
-    cout<<"size of decoded directory in Bytes: "<<sizeInBytes<<endl;
     return 0;
 }
 
@@ -1012,9 +1011,9 @@ int main(int argc, char *argv[]) {
     char* filePathOut = "/Users/mar/Caco/Compress/IAB/ParallelCryptoCompression-master-image/parallel/picsjpg";
     batch_write_img_file( filePathIn, filePathOut, "jpg");
     gettimeofday(&toc,NULL);
-    printf ("Total time for saving as bmp (from arbitrary formats) = %f seconds\n",
-            (double) (toc.tv_usec - tic.tv_usec) / 1000000 +
-            (double) (toc.tv_sec - tic.tv_sec));
+    // printf ("Total time for saving as bmp (from arbitrary formats) = %f seconds\n",
+            // (double) (toc.tv_usec - tic.tv_usec) / 1000000 +
+            // (double) (toc.tv_sec - tic.tv_sec));
 
 
     ///load pics from a directory, compress and save
