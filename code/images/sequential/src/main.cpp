@@ -10,6 +10,7 @@ FILE *inFile;
 model_t model;
 
 struct timeval tic, toc;
+struct timeval ticc, tocc;
 
 char* filePathOriginals;
 char* filePathCompressed;
@@ -67,9 +68,9 @@ void initializeData() {
   inFile = NULL;
   model = MODEL_STATIC;
 
-  filePathOriginals  = "/home/lperin/imgtest/originals";
-  filePathCompressed = "/home/lperin/imgtest/compressed";
-  filePathDecompressed = "/home/lperin/imgtest/decompressed";
+  filePathOriginals  = "./originals";
+  filePathCompressed = "./compressed";
+  filePathDecompressed = "./decompressed";
 }
 
 cv::Mat generate_quantization_matrix(int Blocksize, int R) {
@@ -87,6 +88,8 @@ cv::Mat generate_quantization_matrix(int Blocksize, int R) {
 cv::Mat decode(char* filePathIn, char* fileName) {
   std::string szSerialized = read_coded_file(filePathIn, fileName);
   std::string szTmp, szCompact, szNumbers;
+
+  gettimeofday(&ticc, NULL);
 
   for (auto it=szSerialized.begin(); it!=szSerialized.end(); ++it) {
     std::string szSpace { *it };
@@ -325,10 +328,15 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   cv::Mat mergedImg;
   cv::merge(vmatPlanes, mergedImg);
 
+  gettimeofday(&tocc, NULL);
+  std::cout << "Total computing time for decoding = " << (double) (tocc.tv_usec - ticc.tv_usec) / 1000000 +	(double) (tocc.tv_sec - ticc.tv_sec) << " seconds" << std::endl;
+
   return mergedImg;
 }
 
 std::string encode(cv::Mat matImg) {
+  gettimeofday(&ticc, NULL);
+
   int COLS = matImg.size().width;
   int ROWS = matImg.size().height;
 
@@ -544,6 +552,9 @@ std::string encode(cv::Mat matImg) {
     vnUniqueNegLoc[i] = vcodednloc[1];
     vnCodedNegLoc[i] = vcodednloc[2];
   }
+
+  gettimeofday(&tocc, NULL);
+  std::cout << "Total computing time for decoding = " << (double) (tocc.tv_usec - ticc.tv_usec) / 1000000 +	(double) (tocc.tv_sec - ticc.tv_sec) << " seconds" << std::endl;
 
   std::vector<int> vnSerialized;
   std::string szCompact;

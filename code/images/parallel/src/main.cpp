@@ -10,6 +10,7 @@ FILE *inFile;
 model_t model;
 
 struct timeval tic, toc;
+struct timeval ticc, tocc;
 
 char* filePathOriginals;
 char* filePathCompressed;
@@ -67,15 +68,15 @@ void initializeData() {
   inFile = NULL;
   model = MODEL_STATIC;
 
-  filePathOriginals  = "/home/lperin/imgtest/originals";
-  filePathCompressed = "/home/lperin/imgtest/compressed";
-  filePathDecompressed = "/home/lperin/imgtest/decompressed";
+  filePathOriginals  = "./originals";
+  filePathCompressed = "./compressed";
+  filePathDecompressed = "./decompressed";
 }
 
 cv::Mat generate_quantization_matrix(int Blocksize, int R) {
   cv::Mat Q(Blocksize, Blocksize, CV_32F, cv::Scalar::all(0));
 
-  #pragma omp for schedule(static)
+  #pragma omp parallel for schedule(guided)
   for (int r = 0; r < Blocksize; r++) {
     for (int c = 0; c < Blocksize; c++) {
       Q.at<float>(r,c) = (r == c == 0) ? 1 : (float)(r+c)*R;
@@ -88,6 +89,8 @@ cv::Mat generate_quantization_matrix(int Blocksize, int R) {
 cv::Mat decode(char* filePathIn, char* fileName) {
   std::string szSerialized = read_coded_file(filePathIn, fileName);
   std::string szTmp, szCompact, szNumbers;
+
+  gettimeofday(&ticc, NULL);
 
   // Threads precisariam escrever em ordem nas strings
   for (auto it=szSerialized.begin(); it!=szSerialized.end(); ++it) {
@@ -183,7 +186,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   std::vector<std::vector<int>> vnThreeLoc(planes); std::vector<std::vector<int>> vSize(planes);
   std::vector<std::vector<int>> vnDC(planes);
 
-  #pragma omp for schedule(static)
+  #pragma omp parallel for schedule(guided)
   for (int i = 0; i < planes; i++) {
     int index2 = vnDiffTwoLoc[i][0];
     int index3 = vnDiffThreeLoc[i][0];
@@ -256,6 +259,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   std::vector<std::vector<int>> vnDctACcol(planes);
   std::vector<std::vector<int>> vnZeroLoc(planes);
 
+  #pragma omp parallel for schedule(guided)
   for (int i = 0; i < planes; i++) {
     std::vector<int> vec(vnNonZeroData[i].size() + vnDiffZeroLoc[i].size(), -1);
 
@@ -280,6 +284,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   std::vector<cv::Mat> vmatPlanes(planes);
   std::vector<cv::Mat> vmatOutPlanes(planes);
 
+  #pragma omp parallel for schedule(guided)
   for (int i = 0; i < planes; i++) {
     cv::Mat img2(ROWS, COLS, CV_32F, cv::Scalar(0));
     int start = 0;
@@ -330,10 +335,15 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   cv::Mat mergedImg;
   cv::merge(vmatPlanes, mergedImg);
 
+  gettimeofday(&tocc, NULL);
+  std::cout << "Total computing time for decoding = " << (double) (tocc.tv_usec - ticc.tv_usec) / 1000000 +	(double) (tocc.tv_sec - ticc.tv_sec) << " seconds" << std::endl;
+
   return mergedImg;
 }
 
 std::string encode(cv::Mat matImg) {
+  gettimeofday(&ticc, NULL);
+
   int COLS = matImg.size().width;
   int ROWS = matImg.size().height;
 
@@ -349,10 +359,10 @@ std::string encode(cv::Mat matImg) {
 
   std::vector<cv::Mat> matDctData(planesSize);
 
+  #pragma omp parallel for schedule(guided)
   for (int i = 0; i < planes.size(); i++) {
     planes[i].convertTo(planes[i], CV_32F);
 
-    #pragma omp for schedule(static)
     for (int r = 0; r < ROWS - Blocksize; r += Blocksize) {
       for (int c = 0; c < COLS - Blocksize; c += Blocksize) {
       	cv::Mat roi = planes[i](cv::Rect(c, r, Blocksize, Blocksize));
@@ -416,7 +426,7 @@ std::string encode(cv::Mat matImg) {
 
   std::vector<std::vector<int>> KNegLoc(planesSize);
 
-  #pragma omp for schedule(static)
+  #pragma omp parallel for schedule(guided)
   for (int i = 0; i < planesSize; i++) {
     matDctDC[i] = matDctData[i](cv::Rect(0, 0, 1, matDctData[i].rows)).clone();
     matDctAC[i] = matDctData[i](cv::Rect(1, 0, matDctData[i].cols - 1, matDctData[i].rows)).clone();
@@ -551,6 +561,9 @@ std::string encode(cv::Mat matImg) {
     vnUniqueNegLoc[i] = vcodednloc[1];
     vnCodedNegLoc[i] = vcodednloc[2];
   }
+
+  gettimeofday(&tocc, NULL);
+  std::cout << "Total computing time for encoding = " << (double) (tocc.tv_usec - ticc.tv_usec) / 1000000 +	(double) (tocc.tv_sec - ticc.tv_sec) << " seconds" << std::endl;
 
   std::vector<int> vnSerialized;
   std::string szCompact;
