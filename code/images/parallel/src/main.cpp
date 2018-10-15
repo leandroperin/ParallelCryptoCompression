@@ -75,7 +75,7 @@ void initializeData() {
 cv::Mat generate_quantization_matrix(int Blocksize, int R) {
   cv::Mat Q(Blocksize, Blocksize, CV_32F, cv::Scalar::all(0));
 
-  #pragma omp for schedule(static)
+  #pragma omp parallel for schedule(static) private(c)
   for (int r = 0; r < Blocksize; r++) {
     for (int c = 0; c < Blocksize; c++) {
       Q.at<float>(r,c) = (r == c == 0) ? 1 : (float)(r+c)*R;
@@ -103,6 +103,10 @@ cv::Mat decode(char* filePathIn, char* fileName) {
 
   std::vector<int> data = string2vec(szNumbers);
 
+  struct timeval ticEncode, tocEncode;
+
+  gettimeofday(&ticDecode, NULL);
+  
   int COLS = data[0]; int ROWS = data[1]; int planes = data[2];
   int R = data[3]; int Blocksize = data[4]; int bQ = data[5];
   int DCheight = data[6]; int ACwidth = data[7]; int ACheight = data[8];
@@ -183,7 +187,7 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   std::vector<std::vector<int>> vnThreeLoc(planes); std::vector<std::vector<int>> vSize(planes);
   std::vector<std::vector<int>> vnDC(planes);
 
-  #pragma omp for schedule(static)
+  #pragma omp parallel for schedule(static)
   for (int i = 0; i < planes; i++) {
     int index2 = vnDiffTwoLoc[i][0];
     int index3 = vnDiffThreeLoc[i][0];
@@ -330,10 +334,17 @@ cv::Mat decode(char* filePathIn, char* fileName) {
   cv::Mat mergedImg;
   cv::merge(vmatPlanes, mergedImg);
 
+  gettimeofday(&tocDecode, NULL);
+  std::cout << "Decode computing time = " << (double) (tocDecode.tv_usec - ticDecode.tv_usec) / 1000000 +	(double) (tocDecode.tv_sec - ticDecode.tv_sec) << " seconds" << std::endl;
+
   return mergedImg;
 }
 
 std::string encode(cv::Mat matImg) {
+  struct timeval ticEncode, tocEncode;
+  
+  gettimeofday(&ticEncode, NULL);
+  
   int COLS = matImg.size().width;
   int ROWS = matImg.size().height;
 
@@ -352,7 +363,7 @@ std::string encode(cv::Mat matImg) {
   for (int i = 0; i < planes.size(); i++) {
     planes[i].convertTo(planes[i], CV_32F);
 
-    #pragma omp for schedule(static)
+    #pragma omp parallel for schedule(static) private(c)
     for (int r = 0; r < ROWS - Blocksize; r += Blocksize) {
       for (int c = 0; c < COLS - Blocksize; c += Blocksize) {
       	cv::Mat roi = planes[i](cv::Rect(c, r, Blocksize, Blocksize));
@@ -416,7 +427,7 @@ std::string encode(cv::Mat matImg) {
 
   std::vector<std::vector<int>> KNegLoc(planesSize);
 
-  #pragma omp for schedule(static)
+  #pragma omp parallel for schedule(static)
   for (int i = 0; i < planesSize; i++) {
     matDctDC[i] = matDctData[i](cv::Rect(0, 0, 1, matDctData[i].rows)).clone();
     matDctAC[i] = matDctData[i](cv::Rect(1, 0, matDctData[i].cols - 1, matDctData[i].rows)).clone();
@@ -551,6 +562,9 @@ std::string encode(cv::Mat matImg) {
     vnUniqueNegLoc[i] = vcodednloc[1];
     vnCodedNegLoc[i] = vcodednloc[2];
   }
+
+  gettimeofday(&tocEncode, NULL);
+  std::cout << "Encode computing time = " << (double) (tocEncode.tv_usec - ticEncode.tv_usec) / 1000000 +	(double) (tocEncode.tv_sec - ticEncode.tv_sec) << " seconds" << std::endl;
 
   std::vector<int> vnSerialized;
   std::string szCompact;
