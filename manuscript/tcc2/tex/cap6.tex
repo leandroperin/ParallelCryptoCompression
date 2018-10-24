@@ -1,0 +1,61 @@
+\chapter{Cronograma}
+\label{cap6}
+
+As atividades previstas no projeto estão descritas abaixo:
+
+\begin{itemize}
+    \item \textbf{A1: Estudo da fundamentação teórica.} Nesta etapa será feito o estudo de toda a fundamentação teórica do trabalho, seus conceitos e formas de colocá-los em prática.
+    \item \textbf{A2: Produção do código sequencial.} Nesta etapa será refatorado todo o código do algoritmo, produzindo uma versão limpa e sequencial do mesmo.
+    \item \textbf{A3: Elaboração da proposta.} Nesta etapa será elaborada a proposta do trabalho, incluindo os meios de paralelizar e melhorar o desempenho do algoritmo.
+    \item \textbf{A4: Escrita do relatório do TCC I.} Nesta etapa será escrito o relatório do TCC I, que inclui a fundamentação teórica, descrição do algoritmo sequencial e proposta de paralelização. Entrega prevista para o mês de fevereiro.
+    \item \textbf{A5: Implementação da proposta.} Nesta etapa serão implementadas as ideias propostas para a paralelização do algoritmo.
+    \item \textbf{A6: Realização de experimentos.} Nesta etapa serão realizados experimentos com a versão paralela do código, fazendo medições de desempenho no mesmo.
+    \item \textbf{A7: Escrita do rascunho do TCC II.} Nesta etapa será escrito o rascunho do TCC II, que inclui a proposta implementada e os resultados obtidos. Previsão de entrega para o mês de maio.
+    \item \textbf{A8: Preparação da defesa pública.} Nesta etapa será elaborada a defesa pública do trabalho.
+    \item \textbf{A9: Defesa pública.} Nesta etapa será realizada a defesa pública do trabalho desenvolvido. Data prevista para o mês de junho.
+    \item \textbf{A10: Entrega da versão final do TCC II.} Nesta etapa serão feitas correções e ajustes solicitados no trabalho. Entrega da versão final prevista para o mês de julho.
+\end{itemize}
+
+A Figura~\ref{fig:cronograma} apresenta o cronograma previsto para a realização das atividades descritas anteriormente, o que inclui atividades durante o segundo semestre de 2017 e o primeiro semestre de 2018.
+
+\begin{figure}
+    \begin{center}
+        \begin{ganttchart}[
+        y unit title=0.4cm,
+        y unit chart=0.6cm,
+        hgrid,
+        vgrid={{dotted, dotted, dotted, black}},
+        title label font=\scriptsize,
+        title/.append style={fill=gray!30},
+        title height=1,
+        bar/.append style={fill=gray!30,rounded corners=2pt},
+        bar label font=\scriptsize,
+        group label font=\scriptsize,
+        ]{1}{20}
+            \gantttitle{\textbf{2017}}{8}
+            \gantttitle{\textbf{2018}}{12}\\
+         	\gantttitle{\textbf{Ago}}{2}
+         	\gantttitle{\textbf{Set}}{2}
+        	\gantttitle{\textbf{Out}}{2}
+        	\gantttitle{\textbf{Nov}}{2}
+        	\gantttitle{\textbf{Fev}}{2}
+        	\gantttitle{\textbf{Mar}}{2}
+        	\gantttitle{\textbf{Abr}}{2}
+        	\gantttitle{\textbf{Mai}}{2}
+        	\gantttitle{\textbf{Jun}}{2}
+        	\gantttitle{\textbf{Jul}}{2}\\
+        	
+        	\ganttbar{A1}{1}{2}\\
+        	\ganttbar{A2}{3}{6}\\
+            \ganttbar{A3}{7}{8}\\
+            \ganttbar{A4}{8}{10}\\
+            \ganttbar{A5}{11}{14}\\
+            \ganttbar{A6}{13}{14}\\
+            \ganttbar{A7}{14}{16}\\
+            \ganttbar{A8}{17}{17}\\
+            \ganttbar{A9}{18}{18}\\
+            \ganttbar{A10}{19}{20}
+        \end{ganttchart}
+        \caption{Cronograma de Atividades}\label{fig:cronograma}
+    \end{center}
+\end{figure}
